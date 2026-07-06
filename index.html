@@ -1,10 +1,1245 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar" dir="rtl">
 <head>
-    <title>Ayan AI</title>
+<meta charset="UTF-8">
+<base href="./">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>AYAN AI — معاينة تفاعلية</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090E;--surface:#0B1220;--s2:#101828;--s3:#151F30;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.04);
+  --card:rgba(255,255,255,.035);
+  --teal:#00C8A0;--accent:#00B4D8;--green:#00C896;--gold:#D4A843;
+  --red:#E05C5C;--purple:#7B5EA7;--ai:#6C5CE7;--sms:#4F6FE8;
+  --white:#EEF2F7;--muted:#4A6080;--muted2:#6B84A0;
+  --xs:.7rem;--sm:.8rem;--base:.88rem;--md:.95rem;--lg:1.05rem;--xl:1.2rem;
+  --r:10px;--rs:7px;--rl:16px;
+}
+html,body{height:100%;font-family:'Cairo',sans-serif;background:var(--bg);color:var(--white);-webkit-font-smoothing:antialiased;overflow:hidden}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ── SCREENS ── */
+.screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden}
+.screen.active{display:flex}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface);border:1px solid var(--border);border-radius:30px;padding:9px 20px;font-size:var(--xs);font-weight:600;opacity:0;transition:all .3s;z-index:9999;white-space:nowrap;pointer-events:none}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.ok{border-color:rgba(0,200,150,.3);color:var(--green)}
+#toast.err{border-color:rgba(224,92,92,.3);color:var(--red)}
+#toast.inf{border-color:rgba(0,200,160,.3);color:var(--teal)}
+
+/* ── LOGIN SCREEN ── */
+#screen-login{background:var(--bg);align-items:center;justify-content:center;padding:20px}
+.login-bg{position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(0,180,216,.08),transparent 65%);pointer-events:none}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px 28px;width:100%;max-width:420px;position:relative;z-index:1}
+.logo-wrap{display:flex;align-items:center;gap:8px;margin-bottom:28px;justify-content:center}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 10px var(--teal)}
+.logo-text{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.1rem}
+.logo-badge{background:rgba(0,200,160,.12);border:1px solid rgba(0,200,160,.2);color:var(--teal);font-size:.6rem;font-weight:700;padding:2px 8px;border-radius:4px;margin-right:4px}
+.login-title{font-size:1.3rem;font-weight:800;margin-bottom:6px;text-align:center}
+.login-sub{font-size:var(--xs);color:var(--muted2);text-align:center;margin-bottom:24px}
+.demo-accounts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
+.demo-btn{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:10px;cursor:pointer;transition:all .2s;text-align:center}
+.demo-btn:hover{border-color:var(--teal);background:rgba(0,200,160,.06)}
+.demo-btn .db-icon{font-size:1.2rem;margin-bottom:4px}
+.demo-btn .db-name{font-size:var(--xs);font-weight:700;margin-bottom:2px}
+.demo-btn .db-role{font-size:.62rem;color:var(--muted2)}
+.field{margin-bottom:14px}
+.fl{font-size:var(--xs);font-weight:600;color:var(--muted2);margin-bottom:5px;display:block}
+.fi{width:100%;background:var(--s2);border:1.5px solid var(--border);border-radius:var(--rs);color:var(--white);font-family:'Cairo',sans-serif;font-size:var(--sm);padding:10px 13px;outline:none;transition:border-color .2s}
+.fi:focus{border-color:var(--teal)}
+.btn-login{width:100%;padding:13px;border-radius:50px;background:linear-gradient(135deg,var(--teal),var(--accent));color:#07090E;font-family:'Cairo',sans-serif;font-size:var(--base);font-weight:800;border:none;cursor:pointer;transition:all .2s;margin-top:8px}
+.btn-login:hover{opacity:.88;transform:translateY(-1px)}
+.login-hint{text-align:center;font-size:var(--xs);color:var(--muted2);margin-top:14px}
+
+/* ── MAIN APP ── */
+#screen-app{flex-direction:row}
+.sidebar{width:220px;min-width:220px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;transition:width .3s}
+.sidebar.collapsed{width:56px;min-width:56px}
+.sb-header{padding:14px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.sb-logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:.85rem;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden}
+.sb-toggle{margin-right:auto;width:26px;height:26px;border-radius:6px;background:var(--card);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;transition:all .2s}
+.sb-toggle:hover{border-color:var(--teal)}
+.sb-user{padding:12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;overflow:hidden}
+.sb-avatar{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:#07090E;flex-shrink:0}
+.sb-user-info{overflow:hidden}
+.sb-user-name{font-size:var(--xs);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-user-role{font-size:.6rem;color:var(--muted2)}
+.sb-nav{flex:1;padding:8px 0}
+.sb-section{font-size:.58rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:8px 14px 4px;white-space:nowrap;overflow:hidden}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;border-radius:0;transition:all .18s;position:relative;border-right:3px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,.04)}
+.nav-item.active{background:rgba(0,200,160,.08);border-right-color:var(--teal)}
+.nav-item.active .ni-label{color:var(--teal)}
+.ni-icon{width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.ni-label{font-size:var(--xs);font-weight:600;white-space:nowrap;overflow:hidden}
+.ni-badge{margin-right:auto;background:var(--teal);color:#07090E;font-size:.55rem;font-weight:700;padding:1px 5px;border-radius:3px;flex-shrink:0}
+.sidebar.collapsed .ni-label,.sidebar.collapsed .sb-section,.sidebar.collapsed .sb-user-info,.sidebar.collapsed .sb-logo span{display:none}
+.sidebar.collapsed .nav-item{justify-content:center;padding:10px}
+.sidebar.collapsed .ni-badge{display:none}
+.sb-footer{padding:10px;border-top:1px solid var(--border)}
+.logout-btn{width:100%;padding:8px;border-radius:var(--rs);background:rgba(224,92,92,.08);border:1px solid rgba(224,92,92,.2);color:var(--red);font-family:'Cairo',sans-serif;font-size:var(--xs);font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.logout-btn:hover{background:rgba(224,92,92,.15)}
+.sidebar.collapsed .logout-btn span{display:none}
+
+/* ── PAGES ── */
+.main-content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.page{display:none;flex:1;flex-direction:column;overflow:hidden}
+.page.active{display:flex}
+.page-inner{flex:1;overflow-y:auto;padding:16px}
+.page-header{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:10}
+.ph-title{font-size:var(--lg);font-weight:800;display:flex;align-items:center;gap:8px}
+.ph-sub{font-size:var(--xs);color:var(--muted2);margin-top:1px}
+.ph-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+
+/* ── KPI GRID ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.kc{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px;position:relative;overflow:hidden;cursor:pointer;transition:all .2s}
+.kc:hover{transform:translateY(-2px);border-color:rgba(0,200,160,.2)}
+.kc::before{content:'';position:absolute;top:0;right:0;width:3px;height:100%}
+.c-t::before{background:var(--teal)}.c-a::before{background:var(--accent)}.c-g::before{background:var(--green)}.c-o::before{background:var(--gold)}.c-r::before{background:var(--red)}.c-p::before{background:var(--purple)}
+.kc-icon{width:36px;height:36px;border-radius:var(--rs);display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin-bottom:8px}
+.i-t{background:rgba(0,200,160,.1)}.i-a{background:rgba(0,180,216,.1)}.i-g{background:rgba(0,200,150,.1)}.i-o{background:rgba(212,168,67,.1)}.i-r{background:rgba(224,92,92,.1)}.i-p{background:rgba(123,94,167,.1)}
+.kc-val{font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700;line-height:1;margin-bottom:3px}
+.kc-lbl{font-size:var(--xs);color:var(--muted2)}
+.kc-trend{font-size:.6rem;font-weight:700;padding:2px 5px;border-radius:3px;margin-top:4px;display:inline-block}
+.up{background:rgba(0,200,150,.1);color:var(--green)}.dn{background:rgba(224,92,92,.1);color:var(--red)}
+
+/* ── PANEL ── */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:14px}
+.panel-hdr{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--border)}
+.panel-title{font-size:var(--sm);font-weight:700;display:flex;align-items:center;gap:7px}
+.panel-action{font-size:var(--xs);color:var(--accent);cursor:pointer;background:none;border:none;font-family:'Cairo',sans-serif;padding:0;font-weight:600}
+.panel-body{padding:14px}
+
+/* ── TABLE ── */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:var(--xs);font-weight:700;color:var(--muted);padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);background:rgba(0,0,0,.1);white-space:nowrap}
+.tbl td{font-size:var(--xs);padding:10px 10px;border-bottom:1px solid var(--border2);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(255,255,255,.015);cursor:pointer}
+.tw{overflow-x:auto}
+
+/* ── BADGE ── */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:4px;font-size:.6rem;font-weight:700;white-space:nowrap}
+.b-g{background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.2);color:var(--green)}
+.b-gold{background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.2);color:var(--gold)}
+.b-r{background:rgba(224,92,92,.1);border:1px solid rgba(224,92,92,.2);color:var(--red)}
+.b-b{background:rgba(0,180,216,.1);border:1px solid rgba(0,180,216,.2);color:var(--accent)}
+.b-t{background:rgba(0,200,160,.1);border:1px solid rgba(0,200,160,.2);color:var(--teal)}
+.b-p{background:rgba(123,94,167,.1);border:1px solid rgba(123,94,167,.2);color:var(--purple)}
+
+/* ── BUTTONS ── */
+.btn{padding:7px 16px;border-radius:50px;font-family:'Cairo',sans-serif;font-size:var(--xs);font-weight:700;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:5px}
+.btn-p{background:var(--teal);color:#07090E}.btn-p:hover{opacity:.85}
+.btn-g{background:var(--card);border:1px solid var(--border);color:var(--muted2)}.btn-g:hover{border-color:var(--teal);color:var(--white)}
+.btn-r{background:rgba(224,92,92,.1);border:1px solid rgba(224,92,92,.2);color:var(--red)}.btn-r:hover{background:var(--red);color:#fff}
+
+/* ── AVATAR ── */
+.av{width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:#07090E;flex-shrink:0}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-title{font-size:var(--lg);font-weight:800}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--muted2);font-size:1.1rem;padding:0}
+.mfield{margin-bottom:13px}
+.mfl{font-size:var(--xs);font-weight:600;color:var(--muted2);margin-bottom:5px;display:block}
+.mfi{width:100%;background:var(--s2);border:1.5px solid var(--border);border-radius:var(--rs);color:var(--white);font-family:'Cairo',sans-serif;font-size:var(--xs);padding:9px 12px;outline:none;transition:border-color .2s;-webkit-appearance:none}
+.mfi:focus{border-color:var(--teal)}
+.mrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
+
+/* ── GRID LAYOUTS ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+/* ── CHART BAR ── */
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:100px;margin:8px 0}
+.bar{flex:1;border-radius:4px 4px 0 0;transition:opacity .2s;cursor:pointer;position:relative}
+.bar:hover{opacity:.8}
+.bar-lbl{font-size:.55rem;color:var(--muted2);text-align:center;margin-top:4px}
+
+/* ── SCHEDULE ── */
+.schedule-row{display:flex;gap:8px;padding:9px 0;border-bottom:1px solid var(--border2);align-items:center}
+.schedule-row:last-child{border-bottom:none}
+.sched-time{font-size:var(--xs);font-weight:700;color:var(--teal);min-width:60px;font-family:'Space Grotesk',sans-serif}
+.sched-info{flex:1}
+.sched-name{font-size:var(--xs);font-weight:700}
+.sched-sub{font-size:.62rem;color:var(--muted2)}
+.sched-status{flex-shrink:0}
+
+/* ── STAT ROW ── */
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border2);font-size:var(--xs)}
+.stat-row:last-child{border-bottom:none}
+.stat-k{color:var(--muted2)}.stat-v{font-weight:700}
+
+/* ── PROFILE CARD ── */
+.profile-card{background:linear-gradient(135deg,rgba(0,200,160,.08),rgba(0,180,216,.05));border:1px solid rgba(0,200,160,.15);border-radius:var(--rl);padding:20px;display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.profile-av{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#07090E;flex-shrink:0}
+
+/* ── PROGRESS ── */
+.progress-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:5px}
+.progress-fill{height:100%;border-radius:3px;transition:width .6s}
+
+/* ── TOGGLE ── */
+.toggle{width:38px;height:20px;border-radius:10px;background:var(--border);position:relative;cursor:pointer;transition:background .2s;border:none;flex-shrink:0}
+.toggle.on{background:var(--teal)}
+.toggle::after{content:'';position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s}
+.toggle.on::after{transform:translateX(-18px)}
+
+
+/* ── LANGUAGE SWITCHER ── */
+.lang-btn{height:26px;padding:0 10px;border-radius:6px;background:rgba(0,200,160,.1);border:1px solid rgba(0,200,160,.2);color:var(--teal);font-family:'Space Grotesk',sans-serif;font-size:.7rem;font-weight:700;cursor:pointer;transition:all .2s;flex-shrink:0;letter-spacing:.5px}
+.lang-btn:hover{background:rgba(0,200,160,.2)}
+[lang=en] body,[lang=en] *{direction:ltr;text-align:left}
+[lang=en] .sidebar{border-left:none;border-right:1px solid var(--border)}
+[lang=en] .nav-item{border-right:none;border-left:3px solid transparent}
+[lang=en] .nav-item.active{border-left-color:var(--teal)}
+[lang=en] .page-header,[lang=en] .panel-hdr,[lang=en] .modal-hdr{flex-direction:row}
+[lang=en] .kc::before{right:auto;left:0}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .grid-2,.grid-3{grid-template-columns:1fr}
+  .sidebar{width:56px;min-width:56px}
+  .sidebar .ni-label,.sidebar .sb-section,.sidebar .sb-user-info,.sidebar .sb-logo span{display:none}
+  .sidebar .nav-item{justify-content:center;padding:10px}
+  .sidebar .ni-badge{display:none}
+}
+@media(max-width:480px){
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .page-inner{padding:10px}
+}
+</style>
 </head>
 <body>
-    <h1>مرحباً بك في منصة Ayan AI</h1>
-    <p>تم إطلاق المنصة بنجاح!</p>
+
+<!-- ══ LOGIN SCREEN ══ -->
+<div class="screen active" id="screen-login">
+  <div class="login-bg"></div>
+  <button class="lang-btn" style="position:absolute;top:16px;left:16px;z-index:10" onclick="toggleLang()" id="langBtnLogin">EN</button>
+  <div class="login-card">
+    <div class="logo-wrap">
+      <div class="logo-dot"></div>
+      <div class="logo-text">AYAN <span class="logo-badge">AI</span></div>
+    </div>
+    <div class="login-title">مرحباً بك 👋</div>
+    <div class="login-sub">اختر حساباً تجريبياً للدخول الفوري</div>
+
+    <div class="demo-accounts">
+      <div class="demo-btn" onclick="loginAs('owner','محمد الأحمد','مالك العيادة','🧑‍💼','var(--teal)')">
+        <div class="db-icon">🧑‍💼</div>
+        <div class="db-name">محمد الأحمد</div>
+        <div class="db-role">مالك المركز</div>
+      </div>
+      <div class="demo-btn" onclick="loginAs('manager','سارة المدير','مديرة العمليات','👩‍💼','var(--accent)')">
+        <div class="db-icon">👩‍💼</div>
+        <div class="db-name">سارة المدير</div>
+        <div class="db-role">مديرة العمليات</div>
+      </div>
+      <div class="demo-btn" onclick="loginAs('doctor','د. خالد النور','طبيب أسنان','🩺','var(--green)')">
+        <div class="db-icon">🩺</div>
+        <div class="db-name">د. خالد النور</div>
+        <div class="db-role">طبيب أسنان</div>
+      </div>
+      <div class="demo-btn" onclick="loginAs('receptionist','نورة الاستقبال','موظفة استقبال','💁‍♀️','var(--gold)')">
+        <div class="db-icon">💁‍♀️</div>
+        <div class="db-name">نورة</div>
+        <div class="db-role">موظفة استقبال</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;color:var(--muted);font-size:var(--xs)">
+      <div style="flex:1;height:1px;background:var(--border)"></div>أو<div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+
+    <div class="field">
+      <label class="fl">البريد الإلكتروني</label>
+      <input class="fi" id="email-inp" value="demo@ayanclinic.com" style="direction:ltr">
+    </div>
+    <div class="field">
+      <label class="fl">كلمة المرور</label>
+      <input class="fi" id="pass-inp" type="password" value="demo1234">
+    </div>
+    <button class="btn-login" onclick="loginAs('owner','محمد الأحمد','مالك المركز','🧑‍💼','var(--teal)')">🔐 تسجيل الدخول</button>
+    <div class="login-hint">هذه نسخة تجريبية — البيانات وهمية للعرض</div>
+  </div>
+</div>
+
+<!-- ══ MAIN APP SCREEN ══ -->
+<div class="screen" id="screen-app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-header">
+      <div class="sb-logo">
+        <div class="logo-dot"></div>
+        <span>AYAN AI</span>
+      </div>
+      <button class="lang-btn" id="langBtn" onclick="toggleLang()">EN</button>
+      <button class="sb-toggle" onclick="toggleSidebar()">☰</button>
+    </div>
+    <div class="sb-user">
+      <div class="sb-avatar" id="sb-av" style="background:var(--teal)">م</div>
+      <div class="sb-user-info">
+        <div class="sb-user-name" id="sb-name">محمد الأحمد</div>
+        <div class="sb-user-role" id="sb-role">مالك المركز</div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section">الرئيسي</div>
+      <div class="nav-item active" onclick="gp('dashboard',this)"><div class="ni-icon">📊</div><div class="ni-label">لوحة التحكم</div></div>
+      <div class="nav-item" onclick="gp('patients',this)"><div class="ni-icon">🧑‍⚕️</div><div class="ni-label">المرضى</div><div class="ni-badge">1,247</div></div>
+      <div class="nav-item" onclick="gp('appointments',this)"><div class="ni-icon">📅</div><div class="ni-label">المواعيد</div><div class="ni-badge">8</div></div>
+      <div class="sb-section">الإدارة</div>
+      <div class="nav-item" onclick="gp('doctors',this)"><div class="ni-icon">🩺</div><div class="ni-label">الأطباء</div></div>
+      <div class="nav-item" onclick="gp('permissions',this)"><div class="ni-icon">🔐</div><div class="ni-label">الصلاحيات</div></div>
+      <div class="nav-item" onclick="gp('invoices',this)"><div class="ni-icon">💳</div><div class="ni-label">الفواتير</div></div>
+      <div class="nav-item" onclick="gp('whatsapp',this)"><div class="ni-icon">💬</div><div class="ni-label">واتساب & SMS</div></div>
+      <div class="sb-section">النظام</div>
+      <div class="nav-item" onclick="gp('specialties',this)"><div class="ni-icon">🎯</div><div class="ni-label">التخصصات</div></div>
+      <div class="nav-item" onclick="gp('settings',this)"><div class="ni-icon">⚙️</div><div class="ni-label">الإعدادات</div></div>
+    </nav>
+    <div class="sb-footer">
+      <button class="logout-btn" onclick="logout()">🚪 <span>تسجيل الخروج</span></button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div><div class="ph-title">📊 لوحة التحكم</div><div class="ph-sub">عيادة الابتسامة · الرياض</div></div>
+        <div class="ph-actions">
+          <button class="btn btn-g" onclick="toast('جاري تحديث البيانات...','inf')">🔄 تحديث</button>
+          <button class="btn btn-p" onclick="openModal('modal-patient')">+ مريض جديد</button>
+        </div>
+      </div>
+      <div class="page-inner">
+        <div class="kpi-grid">
+          <div class="kc c-t" onclick="gp('patients',document.querySelector('.nav-item:nth-child(5)'))">
+            <div class="kc-icon i-t">🧑‍⚕️</div>
+            <div class="kc-val" style="color:var(--teal)">1,247</div>
+            <div class="kc-lbl">إجمالي المرضى</div>
+            <span class="kc-trend up">↑ 12% هذا الشهر</span>
+          </div>
+          <div class="kc c-a" onclick="gp('appointments',document.querySelector('.nav-item:nth-child(6)'))">
+            <div class="kc-icon i-a">📅</div>
+            <div class="kc-val" style="color:var(--accent)">8</div>
+            <div class="kc-lbl">مواعيد اليوم</div>
+            <span class="kc-trend up">↑ 3 من الأمس</span>
+          </div>
+          <div class="kc c-g">
+            <div class="kc-icon i-g">💰</div>
+            <div class="kc-val" style="color:var(--green)">48,200</div>
+            <div class="kc-lbl">إيراد الشهر (ر.س)</div>
+            <span class="kc-trend up">↑ 23% عن الشهر الماضي</span>
+          </div>
+          <div class="kc c-o">
+            <div class="kc-icon i-o">⭐</div>
+            <div class="kc-val" style="color:var(--gold)">4.8</div>
+            <div class="kc-lbl">تقييم المرضى</div>
+            <span class="kc-trend up">من 247 تقييم</span>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-hdr"><div class="panel-title">📅 مواعيد اليوم</div><button class="panel-action" onclick="gp('appointments',null)">عرض الكل</button></div>
+            <div class="panel-body" style="padding:0">
+              <div class="schedule-row" style="padding:9px 14px">
+                <div class="sched-time">09:00</div>
+                <div class="sched-info"><div class="sched-name">محمد عبدالله</div><div class="sched-sub">تنظيف أسنان · د. خالد</div></div>
+                <span class="badge b-g">مؤكد</span>
+              </div>
+              <div class="schedule-row" style="padding:9px 14px">
+                <div class="sched-time">10:30</div>
+                <div class="sched-info"><div class="sched-name">فاطمة الزهراء</div><div class="sched-sub">تقويم · د. خالد</div></div>
+                <span class="badge b-gold">قيد الانتظار</span>
+              </div>
+              <div class="schedule-row" style="padding:9px 14px">
+                <div class="sched-time">12:00</div>
+                <div class="sched-info"><div class="sched-name">نورة السعد</div><div class="sched-sub">زراعة · د. أحمد</div></div>
+                <span class="badge b-g">مؤكد</span>
+              </div>
+              <div class="schedule-row" style="padding:9px 14px">
+                <div class="sched-time">14:00</div>
+                <div class="sched-info"><div class="sched-name">خالد الرشيدي</div><div class="sched-sub">تجميل · د. خالد</div></div>
+                <span class="badge b-b">جديد</span>
+              </div>
+              <div class="schedule-row" style="padding:9px 14px">
+                <div class="sched-time">15:30</div>
+                <div class="sched-info"><div class="sched-name">عمر الحربي</div><div class="sched-sub">فحص دوري · د. أحمد</div></div>
+                <span class="badge b-g">مؤكد</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="panel" style="margin-bottom:14px">
+              <div class="panel-hdr"><div class="panel-title">📈 الإيراد الأسبوعي</div></div>
+              <div class="panel-body">
+                <div class="bar-chart" id="dash-chart"></div>
+                <div style="display:flex;justify-content:space-between;font-size:.58rem;color:var(--muted2)" id="dash-chart-lbl"></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-hdr"><div class="panel-title">🤖 AYAN AI اليوم</div></div>
+              <div class="panel-body">
+                <div class="stat-row"><span class="stat-k">رسائل واتساب</span><span class="stat-v" style="color:var(--green)">247</span></div>
+                <div class="stat-row"><span class="stat-k">مواعيد أُكّدت بـ AI</span><span class="stat-v" style="color:var(--teal)">6</span></div>
+                <div class="stat-row"><span class="stat-k">وقت الرد</span><span class="stat-v" style="color:var(--accent)">1.2 ثانية</span></div>
+                <div class="stat-row"><span class="stat-k">رضا المرضى</span><span class="stat-v" style="color:var(--gold)">94%</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PATIENTS -->
+    <div class="page" id="page-patients">
+      <div class="page-header">
+        <div><div class="ph-title">🧑‍⚕️ المرضى</div><div class="ph-sub">1,247 مريض مسجل</div></div>
+        <div class="ph-actions">
+          <input style="background:var(--s2);border:1px solid var(--border);border-radius:20px;color:var(--white);font-family:Cairo,sans-serif;font-size:var(--xs);padding:6px 14px;outline:none;width:180px" placeholder="🔍 بحث..." oninput="filterPatients(this.value)">
+          <button class="btn btn-p" onclick="openModal('modal-patient')">+ مريض جديد</button>
+        </div>
+      </div>
+      <div class="page-inner">
+        <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:14px">
+          <div class="kc c-t"><div class="kc-icon i-t">👥</div><div class="kc-val" style="color:var(--teal)">1,247</div><div class="kc-lbl">إجمالي المرضى</div></div>
+          <div class="kc c-g"><div class="kc-icon i-g">🆕</div><div class="kc-val" style="color:var(--green)">34</div><div class="kc-lbl">هذا الشهر</div></div>
+          <div class="kc c-a"><div class="kc-icon i-a">📅</div><div class="kc-val" style="color:var(--accent)">8</div><div class="kc-lbl">مواعيد اليوم</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><div class="panel-title">قائمة المرضى</div></div>
+          <div class="tw">
+            <table class="tbl">
+              <thead><tr><th>المريض</th><th>الجوال</th><th>العمر</th><th>آخر زيارة</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+              <tbody id="patients-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- APPOINTMENTS -->
+    <div class="page" id="page-appointments">
+      <div class="page-header">
+        <div><div class="ph-title">📅 المواعيد</div><div class="ph-sub">إدارة مواعيد المركز</div></div>
+        <div class="ph-actions">
+          <select style="background:var(--s2);border:1px solid var(--border);border-radius:20px;color:var(--muted2);font-family:Cairo,sans-serif;font-size:var(--xs);padding:6px 12px;outline:none" onchange="toast('تصفية المواعيد','inf')">
+            <option>اليوم</option><option>الأسبوع</option><option>الشهر</option>
+          </select>
+          <button class="btn btn-p" onclick="openModal('modal-appt')">+ موعد جديد</button>
+        </div>
+      </div>
+      <div class="page-inner">
+        <div class="kpi-grid" style="margin-bottom:14px">
+          <div class="kc c-t"><div class="kc-icon i-t">✅</div><div class="kc-val" style="color:var(--green)">5</div><div class="kc-lbl">مؤكدة</div></div>
+          <div class="kc c-a"><div class="kc-icon i-a">⏳</div><div class="kc-val" style="color:var(--gold)">2</div><div class="kc-lbl">قيد الانتظار</div></div>
+          <div class="kc c-g"><div class="kc-icon i-g">✔️</div><div class="kc-val" style="color:var(--accent)">1</div><div class="kc-lbl">جارية الآن</div></div>
+          <div class="kc c-o"><div class="kc-icon i-o">❌</div><div class="kc-val" style="color:var(--red)">0</div><div class="kc-lbl">ملغية</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><div class="panel-title">مواعيد اليوم</div></div>
+          <div class="tw">
+            <table class="tbl">
+              <thead><tr><th>الوقت</th><th>المريض</th><th>الطبيب</th><th>الخدمة</th><th>المدة</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+              <tbody id="appts-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOCTORS -->
+    <div class="page" id="page-doctors">
+      <div class="page-header">
+        <div><div class="ph-title">🩺 الأطباء</div><div class="ph-sub">6 أطباء في المركز</div></div>
+        <div class="ph-actions"><button class="btn btn-p" onclick="openModal('modal-doctor')">+ طبيب جديد</button></div>
+      </div>
+      <div class="page-inner">
+        <div class="grid-3" id="doctors-grid"></div>
+      </div>
+    </div>
+
+    <!-- PERMISSIONS -->
+    <div class="page" id="page-permissions">
+      <div class="page-header">
+        <div><div class="ph-title">🔐 الصلاحيات</div><div class="ph-sub">إدارة أدوار المستخدمين</div></div>
+        <div class="ph-actions"><button class="btn btn-p" onclick="openModal('modal-user')">+ موظف جديد</button></div>
+      </div>
+      <div class="page-inner">
+        <div class="grid-2" style="margin-bottom:14px">
+          <div class="panel">
+            <div class="panel-hdr"><div class="panel-title">👥 المستخدمون</div></div>
+            <div class="tw"><table class="tbl">
+              <thead><tr><th>الاسم</th><th>الدور</th><th>الحالة</th><th>صلاحية</th></tr></thead>
+              <tbody>
+                <tr><td><div style="display:flex;align-items:center;gap:7px"><div class="av" style="background:var(--teal)">م</div>محمد الأحمد</div></td><td><span class="badge b-t">مالك</span></td><td><span class="badge b-g">نشط</span></td><td>كاملة</td></tr>
+                <tr><td><div style="display:flex;align-items:center;gap:7px"><div class="av" style="background:var(--accent)">س</div>سارة المدير</div></td><td><span class="badge b-b">مدير</span></td><td><span class="badge b-g">نشط</span></td><td>إدارية</td></tr>
+                <tr><td><div style="display:flex;align-items:center;gap:7px"><div class="av" style="background:var(--green)">خ</div>د. خالد</div></td><td><span class="badge b-p">طبيب</span></td><td><span class="badge b-g">نشط</span></td><td>طبية</td></tr>
+                <tr><td><div style="display:flex;align-items:center;gap:7px"><div class="av" style="background:var(--gold)">ن</div>نورة</div></td><td><span class="badge b-gold">استقبال</span></td><td><span class="badge b-g">نشط</span></td><td>استقبال</td></tr>
+                <tr><td><div style="display:flex;align-items:center;gap:7px"><div class="av" style="background:var(--purple)">ع</div>عبدالله</div></td><td><span class="badge b-p">محاسب</span></td><td><span class="badge b-g">نشط</span></td><td>مالية</td></tr>
+              </tbody>
+            </table></div>
+          </div>
+          <div class="panel">
+            <div class="panel-hdr"><div class="panel-title">🔑 جدول الصلاحيات</div></div>
+            <div class="panel-body" style="padding:0">
+              <table class="tbl" style="font-size:.65rem">
+                <thead><tr><th>الصلاحية</th><th>مالك</th><th>مدير</th><th>طبيب</th><th>استقبال</th></tr></thead>
+                <tbody>
+                  <tr><td>إضافة مريض</td><td style="text-align:center;color:var(--green)">✅</td><td style="text-align:center;color:var(--green)">✅</td><td style="text-align:center;color:var(--red)">❌</td><td style="text-align:center;color:var(--green)">✅</td></tr>
+                  <tr><td>عرض الفواتير</td><td style="text-align:center;color:var(--green)">✅</td><td style="text-align:center;color:var(--green)">✅</td><td style="text-align:center;color:var(--red)">❌</td><td style="text-align:center;color:var(--red)">❌</td></tr>
+                  <tr><td>إصدار وصفة</td><td style="text-align:center;color:var(--green)">✅</td><td style="text-align:center;color:var(--red)">❌</td><td style="text-align:center;color:var(--green)">✅</td><td style="text-align:center;color:var(--red)">❌</td></tr>
+                  <tr><td>إدارة الموظفين</td><td style="text-align:center;color:var(--green)">✅</td><td style="text-align:center;color:var(--green)">✅</td><td style="text-align:center;color:var(--red)">❌</td><td style="text-align:center;color:var(--red)">❌</td></tr>
+                  <tr><td>Super Admin</td><td style="text-align:center;color:var(--green)">✅</td><td style="text-align:center;color:var(--red)">❌</td><td style="text-align:center;color:var(--red)">❌</td><td style="text-align:center;color:var(--red)">❌</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVOICES -->
+    <div class="page" id="page-invoices">
+      <div class="page-header">
+        <div><div class="ph-title">💳 الفواتير</div><div class="ph-sub">إدارة الفواتير والمدفوعات</div></div>
+        <div class="ph-actions"><button class="btn btn-p" onclick="openModal('modal-invoice')">+ فاتورة جديدة</button></div>
+      </div>
+      <div class="page-inner">
+        <div class="kpi-grid" style="margin-bottom:14px">
+          <div class="kc c-g"><div class="kc-icon i-g">✅</div><div class="kc-val" style="color:var(--green)">42,800</div><div class="kc-lbl">مسدد (ر.س)</div></div>
+          <div class="kc c-o"><div class="kc-icon i-o">⏳</div><div class="kc-val" style="color:var(--gold)">5,400</div><div class="kc-lbl">معلق (ر.س)</div></div>
+          <div class="kc c-a"><div class="kc-icon i-a">📋</div><div class="kc-val" style="color:var(--accent)">127</div><div class="kc-lbl">فاتورة هذا الشهر</div></div>
+          <div class="kc c-t"><div class="kc-icon i-t">💵</div><div class="kc-val" style="color:var(--teal)">48,200</div><div class="kc-lbl">إجمالي الشهر</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><div class="panel-title">آخر الفواتير</div></div>
+          <div class="tw"><table class="tbl">
+            <thead><tr><th>رقم الفاتورة</th><th>المريض</th><th>المبلغ</th><th>طريقة الدفع</th><th>التاريخ</th><th>الحالة</th></tr></thead>
+            <tbody>
+              <tr><td style="font-family:'Space Grotesk',sans-serif;font-weight:700">INV-0127</td><td>محمد عبدالله</td><td style="color:var(--green);font-weight:700">350 ر.س</td><td>بطاقة</td><td>اليوم</td><td><span class="badge b-g">مسدد</span></td></tr>
+              <tr><td style="font-family:'Space Grotesk',sans-serif;font-weight:700">INV-0126</td><td>فاطمة الزهراء</td><td style="color:var(--gold);font-weight:700">1,200 ر.س</td><td>تأمين</td><td>اليوم</td><td><span class="badge b-gold">معلق</span></td></tr>
+              <tr><td style="font-family:'Space Grotesk',sans-serif;font-weight:700">INV-0125</td><td>نورة السعد</td><td style="color:var(--green);font-weight:700">750 ر.س</td><td>كاش</td><td>أمس</td><td><span class="badge b-g">مسدد</span></td></tr>
+              <tr><td style="font-family:'Space Grotesk',sans-serif;font-weight:700">INV-0124</td><td>خالد الرشيدي</td><td style="color:var(--green);font-weight:700">500 ر.س</td><td>مدى</td><td>أمس</td><td><span class="badge b-g">مسدد</span></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WHATSAPP -->
+    <div class="page" id="page-whatsapp">
+      <div class="page-header">
+        <div><div class="ph-title">💬 واتساب & SMS</div><div class="ph-sub">الرسائل والتذكيرات التلقائية</div></div>
+        <div class="ph-actions">
+          <div style="display:flex;align-items:center;gap:5px;font-size:var(--xs);color:var(--green);background:rgba(37,211,102,.08);border:1px solid rgba(37,211,102,.2);padding:4px 12px;border-radius:20px">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:block;animation:pulse 2s infinite"></span>
+            واتساب متصل
+          </div>
+          <button class="btn btn-p" onclick="toast('تم إرسال البث الجماعي لـ 1,247 مريض ✅','ok')">📢 بث جماعي</button>
+        </div>
+      </div>
+      <div class="page-inner">
+        <div class="kpi-grid" style="margin-bottom:14px">
+          <div class="kc c-g"><div class="kc-icon i-g">💬</div><div class="kc-val" style="color:var(--green)">38,492</div><div class="kc-lbl">رسالة هذا الشهر</div></div>
+          <div class="kc c-t"><div class="kc-icon i-t">🤖</div><div class="kc-val" style="color:var(--teal)">94%</div><div class="kc-lbl">AI يعالج تلقائياً</div></div>
+          <div class="kc c-a"><div class="kc-icon i-a">📱</div><div class="kc-val" style="color:var(--accent)">4,847</div><div class="kc-lbl">SMS هذا الشهر</div></div>
+          <div class="kc c-o"><div class="kc-icon i-o">⭐</div><div class="kc-val" style="color:var(--gold)">4.7</div><div class="kc-lbl">رضا المرضى</div></div>
+        </div>
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-hdr"><div class="panel-title">🔔 التذكيرات التلقائية</div></div>
+            <div class="panel-body" id="reminder-toggles"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-hdr"><div class="panel-title">📊 آخر الرسائل</div></div>
+            <div class="panel-body" style="padding:0">
+              <div class="schedule-row" style="padding:9px 14px"><div class="sched-time" style="color:var(--green)">واتساب</div><div class="sched-info"><div class="sched-name">تذكير موعد — محمد عبدالله</div><div class="sched-sub">منذ 5 دقائق</div></div><span class="badge b-g">وُصّل</span></div>
+              <div class="schedule-row" style="padding:9px 14px"><div class="sched-time" style="color:var(--sms)">SMS</div><div class="sched-info"><div class="sched-name">تأكيد حجز — نورة السعد</div><div class="sched-sub">منذ 12 دقيقة</div></div><span class="badge b-g">وُصّل</span></div>
+              <div class="schedule-row" style="padding:9px 14px"><div class="sched-time" style="color:var(--green)">واتساب</div><div class="sched-info"><div class="sched-name">طلب تقييم — خالد الرشيدي</div><div class="sched-sub">منذ 1 ساعة</div></div><span class="badge b-g">وُصّل</span></div>
+              <div class="schedule-row" style="padding:9px 14px"><div class="sched-time" style="color:var(--green)">واتساب</div><div class="sched-info"><div class="sched-name">متابعة زيارة — عمر الحربي</div><div class="sched-sub">منذ 3 ساعات</div></div><span class="badge b-g">وُصّل</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SPECIALTIES -->
+    <div class="page" id="page-specialties">
+      <div class="page-header">
+        <div><div class="ph-title">🎯 التخصصات</div><div class="ph-sub">إدارة تخصصات وخدمات المركز</div></div>
+        <div class="ph-actions"><button class="btn btn-p" onclick="openModal('modal-spec')">+ تخصص جديد</button></div>
+      </div>
+      <div class="page-inner">
+        <div class="grid-3" id="specs-grid"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div><div class="ph-title">⚙️ الإعدادات</div><div class="ph-sub">إعدادات مركزك الطبي</div></div>
+        <div class="ph-actions"><button class="btn btn-p" onclick="toast('تم حفظ الإعدادات ✅','ok')">💾 حفظ التغييرات</button></div>
+      </div>
+      <div class="page-inner">
+        <div class="profile-card">
+          <div class="profile-av" style="background:var(--teal)">🏥</div>
+          <div>
+            <div style="font-size:var(--lg);font-weight:800;margin-bottom:3px">عيادة الابتسامة</div>
+            <div style="font-size:var(--xs);color:var(--muted2)">CLN-AAA-001 · الرياض، السعودية</div>
+            <div style="display:flex;gap:6px;margin-top:7px">
+              <span class="badge b-t">Pro Plan</span>
+              <span class="badge b-g">✅ نشط</span>
+              <span class="badge b-gold">14 يوم تجريبي</span>
+            </div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-hdr"><div class="panel-title">🏥 معلومات المركز</div></div>
+            <div class="panel-body">
+              <div class="mfield"><label class="mfl">اسم المركز</label><input class="mfi" value="عيادة الابتسامة"></div>
+              <div class="mfield"><label class="mfl">رقم الجوال</label><input class="mfi" value="+966 50 123 4567" style="direction:ltr"></div>
+              <div class="mfield"><label class="mfl">البريد الإلكتروني</label><input class="mfi" value="info@alabtisamah.com" style="direction:ltr"></div>
+              <div class="mrow">
+                <div class="mfield"><label class="mfl">المدينة</label><select class="mfi"><option>الرياض</option><option>جدة</option><option>الدمام</option></select></div>
+                <div class="mfield"><label class="mfl">ساعات العمل</label><select class="mfi"><option>8ص - 5م</option><option>9ص - 6م</option><option>8ص - 9م</option></select></div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-hdr"><div class="panel-title">💳 الخطة والاشتراك</div></div>
+            <div class="panel-body">
+              <div class="stat-row"><span class="stat-k">الخطة الحالية</span><span class="stat-v" style="color:var(--teal)">Pro — $99/شهر</span></div>
+              <div class="stat-row"><span class="stat-k">تجديد الاشتراك</span><span class="stat-v">1 أغسطس 2025</span></div>
+              <div class="stat-row"><span class="stat-k">طريقة الدفع</span><span class="stat-v">Visa ****4242</span></div>
+              <div class="stat-row"><span class="stat-k">المرضى المسجلون</span><span class="stat-v">1,247 / غير محدود</span></div>
+              <div style="margin-top:14px;display:flex;gap:8px">
+                <button class="btn btn-g" onclick="toast('جاري فتح بوابة الدفع...','inf')">تغيير الخطة</button>
+                <button class="btn btn-p" onclick="toast('تم تجديد الاشتراك ✅','ok')">تجديد الآن</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main-content -->
+</div><!-- /screen-app -->
+
+<!-- ══ MODALS ══ -->
+
+<!-- Modal: Patient -->
+<div class="modal-overlay" id="modal-patient">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title">🧑‍⚕️ مريض جديد</div><button class="modal-close" onclick="closeModal('modal-patient')">✕</button></div>
+    <div class="mfield"><label class="mfl">الاسم الكامل *</label><input class="mfi" placeholder="محمد عبدالله"></div>
+    <div class="mrow">
+      <div class="mfield"><label class="mfl">رقم الجوال *</label><input class="mfi" placeholder="+966 5X..." style="direction:ltr"></div>
+      <div class="mfield"><label class="mfl">تاريخ الميلاد</label><input class="mfi" type="date"></div>
+    </div>
+    <div class="mrow">
+      <div class="mfield"><label class="mfl">الجنس</label><select class="mfi"><option>ذكر</option><option>أنثى</option></select></div>
+      <div class="mfield"><label class="mfl">فصيلة الدم</label><select class="mfi"><option>A+</option><option>A-</option><option>B+</option><option>O+</option><option>O-</option><option>AB+</option></select></div>
+    </div>
+    <div class="mfield"><label class="mfl">الحساسية (إن وجد)</label><input class="mfi" placeholder="البنسلين، مضادات حيوية..."></div>
+    <div class="modal-footer">
+      <button class="btn btn-g" onclick="closeModal('modal-patient')">إلغاء</button>
+      <button class="btn btn-p" onclick="savePatient()">✅ حفظ المريض</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Appointment -->
+<div class="modal-overlay" id="modal-appt">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title">📅 موعد جديد</div><button class="modal-close" onclick="closeModal('modal-appt')">✕</button></div>
+    <div class="mfield"><label class="mfl">اسم المريض *</label><input class="mfi" placeholder="اكتب اسم المريض..."></div>
+    <div class="mrow">
+      <div class="mfield"><label class="mfl">الطبيب</label><select class="mfi"><option>د. خالد النور</option><option>د. أحمد السالم</option><option>د. سارة الرشيد</option></select></div>
+      <div class="mfield"><label class="mfl">التخصص</label><select class="mfi"><option>أسنان عام</option><option>تقويم</option><option>زراعة</option><option>تجميل</option></select></div>
+    </div>
+    <div class="mrow">
+      <div class="mfield"><label class="mfl">التاريخ</label><input class="mfi" type="date"></div>
+      <div class="mfield"><label class="mfl">الوقت</label><input class="mfi" type="time" value="09:00"></div>
+    </div>
+    <div class="mfield"><label class="mfl">ملاحظات</label><textarea class="mfi" rows="2" placeholder="أي تفاصيل إضافية..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-g" onclick="closeModal('modal-appt')">إلغاء</button>
+      <button class="btn btn-p" onclick="saveAppt()">📅 حجز الموعد</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Doctor -->
+<div class="modal-overlay" id="modal-doctor">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title">🩺 طبيب جديد</div><button class="modal-close" onclick="closeModal('modal-doctor')">✕</button></div>
+    <div class="mfield"><label class="mfl">الاسم الكامل</label><input class="mfi" placeholder="د. محمد الأحمد"></div>
+    <div class="mrow">
+      <div class="mfield"><label class="mfl">التخصص</label><select class="mfi"><option>أسنان عام</option><option>تقويم</option><option>زراعة</option><option>جلدية</option></select></div>
+      <div class="mfield"><label class="mfl">سنوات الخبرة</label><input class="mfi" type="number" value="5"></div>
+    </div>
+    <div class="mfield"><label class="mfl">البريد الإلكتروني</label><input class="mfi" placeholder="doctor@clinic.com" style="direction:ltr"></div>
+    <div class="modal-footer">
+      <button class="btn btn-g" onclick="closeModal('modal-doctor')">إلغاء</button>
+      <button class="btn btn-p" onclick="closeModal('modal-doctor');toast('✅ تم إضافة الطبيب وإرسال بيانات الدخول','ok')">إضافة الطبيب</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: User/Permission -->
+<div class="modal-overlay" id="modal-user">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title">👤 موظف جديد</div><button class="modal-close" onclick="closeModal('modal-user')">✕</button></div>
+    <div class="mfield"><label class="mfl">الاسم</label><input class="mfi" placeholder="اسم الموظف"></div>
+    <div class="mrow">
+      <div class="mfield"><label class="mfl">الدور</label><select class="mfi"><option>مدير</option><option>طبيب</option><option>استقبال</option><option>محاسب</option></select></div>
+      <div class="mfield"><label class="mfl">الجوال</label><input class="mfi" placeholder="+966..."></div>
+    </div>
+    <div class="mfield"><label class="mfl">البريد الإلكتروني</label><input class="mfi" placeholder="staff@clinic.com" style="direction:ltr"></div>
+    <div class="modal-footer">
+      <button class="btn btn-g" onclick="closeModal('modal-user')">إلغاء</button>
+      <button class="btn btn-p" onclick="closeModal('modal-user');toast('✅ تم إضافة الموظف وإرسال كلمة المرور','ok')">إضافة الموظف</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Invoice -->
+<div class="modal-overlay" id="modal-invoice">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title">💳 فاتورة جديدة</div><button class="modal-close" onclick="closeModal('modal-invoice')">✕</button></div>
+    <div class="mfield"><label class="mfl">المريض</label><input class="mfi" placeholder="اسم المريض..."></div>
+    <div class="mfield"><label class="mfl">الخدمة</label><input class="mfi" placeholder="وصف الخدمة الطبية"></div>
+    <div class="mrow">
+      <div class="mfield"><label class="mfl">المبلغ (ر.س)</label><input class="mfi" type="number" placeholder="0.00"></div>
+      <div class="mfield"><label class="mfl">طريقة الدفع</label><select class="mfi"><option>كاش</option><option>بطاقة</option><option>مدى</option><option>تأمين</option></select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-g" onclick="closeModal('modal-invoice')">إلغاء</button>
+      <button class="btn btn-p" onclick="closeModal('modal-invoice');toast('✅ تم إصدار الفاتورة INV-0128','ok')">إصدار الفاتورة</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Specialty -->
+<div class="modal-overlay" id="modal-spec">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title">🎯 تخصص جديد</div><button class="modal-close" onclick="closeModal('modal-spec')">✕</button></div>
+    <div class="mfield"><label class="mfl">اسم التخصص</label><input class="mfi" placeholder="مثال: تجميل الأسنان" id="spec-name-inp"></div>
+    <div class="mrow">
+      <div class="mfield"><label class="mfl">الأيقونة</label><input class="mfi" id="spec-icon-inp" value="🏥" placeholder="🏥"></div>
+      <div class="mfield"><label class="mfl">مدة الجلسة (دقيقة)</label><input class="mfi" type="number" value="30"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-g" onclick="closeModal('modal-spec')">إلغاء</button>
+      <button class="btn btn-p" onclick="addSpec()">إضافة التخصص</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<style>
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.5)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.page.active .page-inner > *{animation:fadeIn .3s ease}
+</style>
+
+<script>
+// ── DATA ──
+const PATIENTS = [
+  {name:'محمد عبدالله',phone:'0501234567',age:29,last:'اليوم',status:'active',blood:'O+'},
+  {name:'فاطمة الزهراء',phone:'0509876543',age:34,last:'أمس',status:'active',blood:'A+'},
+  {name:'نورة السعد',phone:'0512345678',age:27,last:'3 أيام',status:'active',blood:'B+'},
+  {name:'خالد الرشيدي',phone:'0556781234',age:45,last:'أسبوع',status:'active',blood:'AB+'},
+  {name:'عمر الحربي',phone:'0561234567',age:31,last:'أسبوعان',status:'inactive',blood:'O-'},
+  {name:'هند الأحمد',phone:'0571234567',age:22,last:'شهر',status:'active',blood:'A-'},
+  {name:'سلمى الغامدي',phone:'0581234567',age:38,last:'شهر',status:'active',blood:'B-'},
+  {name:'بدر الزهراني',phone:'0591234567',age:52,last:'شهران',status:'active',blood:'O+'},
+];
+
+const APPTS = [
+  {time:'09:00',name:'محمد عبدالله',doctor:'د. خالد',service:'تنظيف أسنان',dur:'30 دق',status:'done'},
+  {time:'10:30',name:'فاطمة الزهراء',doctor:'د. خالد',service:'تقويم',dur:'45 دق',status:'confirmed'},
+  {time:'12:00',name:'نورة السعد',doctor:'د. أحمد',service:'زراعة أسنان',dur:'90 دق',status:'confirmed'},
+  {time:'13:00',name:'—',doctor:'—',service:'استراحة',dur:'60 دق',status:'break'},
+  {time:'14:00',name:'خالد الرشيدي',doctor:'د. خالد',service:'تجميل',dur:'60 دق',status:'pending'},
+  {time:'15:30',name:'عمر الحربي',doctor:'د. أحمد',service:'فحص دوري',dur:'30 دق',status:'confirmed'},
+  {time:'16:30',name:'هند الأحمد',doctor:'د. سارة',service:'تبييض',dur:'45 دق',status:'confirmed'},
+  {time:'17:00',name:'سلمى الغامدي',doctor:'د. خالد',service:'حشو',dur:'30 دق',status:'pending'},
+];
+
+const DOCTORS = [
+  {name:'د. خالد النور',spec:'أسنان عام + تقويم',exp:'8 سنوات',patients:342,rating:4.9,color:'var(--teal)',icon:'🦷'},
+  {name:'د. أحمد السالم',spec:'زراعة + جراحة فموية',exp:'12 سنة',patients:287,rating:4.8,color:'var(--accent)',icon:'🔩'},
+  {name:'د. سارة الرشيد',spec:'تجميل + تبييض',exp:'6 سنوات',patients:198,rating:4.9,color:'var(--purple)',icon:'✨'},
+  {name:'د. ليلى الشمري',spec:'أسنان أطفال',exp:'5 سنوات',patients:156,rating:4.7,color:'var(--green)',icon:'👶'},
+  {name:'د. فهد المطيري',spec:'أمراض اللثة',exp:'9 سنوات',patients:203,rating:4.8,color:'var(--gold)',icon:'🩸'},
+  {name:'د. منى العتيبي',spec:'تقويم متقدم',exp:'7 سنوات',patients:174,rating:4.9,color:'var(--red)',icon:'😁'},
+];
+
+const SPECS = [
+  {name:'طب أسنان عام',icon:'🦷',color:'var(--accent)',services:8,docs:3},
+  {name:'تقويم أسنان',icon:'😁',color:'var(--purple)',services:5,docs:2},
+  {name:'زراعة أسنان',icon:'🔩',color:'var(--teal)',services:4,docs:2},
+  {name:'تجميل أسنان',icon:'✨',color:'var(--gold)',services:6,docs:2},
+  {name:'أسنان أطفال',icon:'👶',color:'var(--green)',services:5,docs:1},
+  {name:'أمراض اللثة',icon:'🩸',color:'var(--red)',services:4,docs:1},
+];
+
+const REMINDERS = [
+  {label:'تذكير الموعد (24 ساعة)',icon:'🔔',on:true},
+  {label:'تذكير أخير (ساعتان)',icon:'⏰',on:true},
+  {label:'متابعة بعد الزيارة',icon:'🔄',on:true},
+  {label:'طلب تقييم',icon:'⭐',on:true},
+  {label:'متابعة عدم الحضور',icon:'❌',on:true},
+  {label:'مراجعة دورية (6 أشهر)',icon:'📅',on:true},
+  {label:'تهنئة عيد الميلاد',icon:'🎂',on:false},
+  {label:'تذكير الفواتير المعلقة',icon:'💳',on:true},
+];
+
+const COLORS=['var(--teal)','var(--accent)','var(--green)','var(--gold)','var(--purple)','var(--red)'];
+
+// ── CURRENT USER ──
+let currentUser = {};
+
+// ── LOGIN ──
+function loginAs(role, name, roleLabel, icon, color) {
+  currentUser = { role, name, roleLabel, icon, color };
+  const cleanColor = color.replace('var(','').replace(')','');
+  document.getElementById('sb-av').textContent = name[0];
+  document.getElementById('sb-av').style.background = color;
+  document.getElementById('sb-name').textContent = name;
+  document.getElementById('sb-role').textContent = roleLabel;
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+  setTimeout(() => {
+    renderPatients(PATIENTS);
+    renderAppts(APPTS);
+    renderDoctors(DOCTORS);
+    renderSpecs(SPECS);
+    renderReminders();
+    renderChart();
+    toast(`مرحباً ${name} 👋`, 'ok');
+  }, 100);
+}
+
+function logout() {
+  document.getElementById('screen-app').classList.remove('active');
+  document.getElementById('screen-login').classList.add('active');
+  toast('تم تسجيل الخروج بنجاح', 'inf');
+}
+
+// ── PAGE NAV ──
+function gp(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const page = document.getElementById('page-' + id);
+  if (page) page.classList.add('active');
+  if (el) el.classList.add('active');
+  else {
+    document.querySelectorAll('.nav-item').forEach(n => {
+      if (n.onclick && n.onclick.toString().includes("'" + id + "'")) n.classList.add('active');
+    });
+  }
+}
+
+// ── SIDEBAR TOGGLE ──
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+// ── RENDER PATIENTS ──
+function renderPatients(data) {
+  const tbody = document.getElementById('patients-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = data.map((p, i) => `
+    <tr onclick="toast('ملف ${p.name}','inf')">
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div class="av" style="background:${COLORS[i%COLORS.length]}">${p.name[0]}</div>
+        <div><div style="font-weight:700">${p.name}</div><div style="font-size:.62rem;color:var(--muted2)">فصيلة ${p.blood}</div></div>
+      </div></td>
+      <td style="direction:ltr;color:var(--muted2)">${p.phone}</td>
+      <td>${p.age} سنة</td>
+      <td style="color:var(--muted2)">${p.last}</td>
+      <td><span class="badge ${p.status==='active'?'b-g':'b-r'}">${p.status==='active'?'نشط':'غير نشط'}</span></td>
+      <td><div style="display:flex;gap:4px">
+        <button class="btn btn-g" style="padding:4px 10px;font-size:.6rem" onclick="event.stopPropagation();toast('فتح ملف ${p.name}','inf')">📋 الملف</button>
+        <button class="btn btn-p" style="padding:4px 10px;font-size:.6rem" onclick="event.stopPropagation();openModal('modal-appt')">📅 موعد</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+function filterPatients(q) {
+  const filtered = PATIENTS.filter(p => p.name.includes(q) || p.phone.includes(q));
+  renderPatients(filtered);
+}
+
+function savePatient() {
+  closeModal('modal-patient');
+  const fake = {name:'مريض جديد',phone:'0500000000',age:25,last:'اليوم',status:'active',blood:'O+'};
+  PATIENTS.unshift(fake);
+  renderPatients(PATIENTS);
+  toast('✅ تم تسجيل المريض وإرسال رسالة ترحيب واتساب', 'ok');
+}
+
+// ── RENDER APPTS ──
+function renderAppts(data) {
+  const tbody = document.getElementById('appts-tbody');
+  if (!tbody) return;
+  const statusMap = {confirmed:'b-g',done:'b-b',pending:'b-gold',break:'b-r'};
+  const statusLbl = {confirmed:'مؤكد',done:'انتهى',pending:'انتظار',break:'استراحة'};
+  tbody.innerHTML = data.map(a => `
+    <tr>
+      <td style="font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--teal)">${a.time}</td>
+      <td style="font-weight:700">${a.name}</td>
+      <td style="color:var(--muted2)">${a.doctor}</td>
+      <td>${a.service}</td>
+      <td style="color:var(--muted2)">${a.dur}</td>
+      <td><span class="badge ${statusMap[a.status]||'b-gold'}">${statusLbl[a.status]||a.status}</span></td>
+      <td><div style="display:flex;gap:4px">
+        ${a.status!=='break'?`
+        <button class="btn btn-g" style="padding:4px 8px;font-size:.6rem" onclick="toast('تم إرسال تذكير واتساب ✅','ok')">💬</button>
+        <button class="btn btn-r" style="padding:4px 8px;font-size:.6rem" onclick="toast('تم إلغاء الموعد','inf')">✕</button>
+        `:'—'}
+      </div></td>
+    </tr>`).join('');
+}
+
+function saveAppt() {
+  closeModal('modal-appt');
+  toast('✅ تم حجز الموعد وإرسال تأكيد واتساب للمريض', 'ok');
+}
+
+// ── RENDER DOCTORS ──
+function renderDoctors(data) {
+  const grid = document.getElementById('doctors-grid');
+  if (!grid) return;
+  grid.innerHTML = data.map(d => `
+    <div class="panel" style="cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='rgba(0,200,160,.3)'" onmouseout="this.style.borderColor=''" onclick="toast('ملف ${d.name}','inf')">
+      <div class="panel-body">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div style="width:46px;height:46px;border-radius:12px;background:${d.color}18;border:1px solid ${d.color}30;display:flex;align-items:center;justify-content:center;font-size:1.3rem">${d.icon}</div>
+          <div>
+            <div style="font-size:var(--sm);font-weight:800">${d.name}</div>
+            <div style="font-size:.62rem;color:var(--muted2)">${d.spec}</div>
+          </div>
+        </div>
+        <div class="stat-row"><span class="stat-k">خبرة</span><span class="stat-v">${d.exp}</span></div>
+        <div class="stat-row"><span class="stat-k">المرضى</span><span class="stat-v" style="color:${d.color}">${d.patients}</span></div>
+        <div class="stat-row"><span class="stat-k">التقييم</span><span class="stat-v" style="color:var(--gold)">⭐ ${d.rating}</span></div>
+        <div style="margin-top:10px;display:flex;gap:5px">
+          <button class="btn btn-g" style="flex:1;font-size:.6rem;justify-content:center" onclick="event.stopPropagation();openModal('modal-appt')">📅 موعد</button>
+          <button class="btn btn-p" style="flex:1;font-size:.6rem;justify-content:center" onclick="event.stopPropagation();toast('عرض جدول ${d.name}','inf')">📋 الجدول</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ── RENDER SPECS ──
+function renderSpecs(data) {
+  const grid = document.getElementById('specs-grid');
+  if (!grid) return;
+  grid.innerHTML = data.map(s => `
+    <div class="panel" style="cursor:pointer" onclick="toast('إدارة ${s.name}','inf')">
+      <div class="panel-body">
+        <div style="font-size:2rem;margin-bottom:10px">${s.icon}</div>
+        <div style="font-size:var(--sm);font-weight:800;margin-bottom:6px">${s.name}</div>
+        <div class="stat-row"><span class="stat-k">الخدمات</span><span class="stat-v" style="color:${s.color}">${s.services}</span></div>
+        <div class="stat-row"><span class="stat-k">الأطباء</span><span class="stat-v">${s.docs}</span></div>
+        <div style="margin-top:8px;display:flex;gap:5px">
+          <button class="btn btn-g" style="flex:1;font-size:.6rem;justify-content:center" onclick="event.stopPropagation();toast('تعديل ${s.name}','inf')">✏️ تعديل</button>
+          <button class="btn btn-r" style="flex:1;font-size:.6rem;justify-content:center" onclick="event.stopPropagation();toast('حذف ${s.name}','inf')">🗑️</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function addSpec() {
+  const name = document.getElementById('spec-name-inp')?.value?.trim();
+  const icon = document.getElementById('spec-icon-inp')?.value || '🏥';
+  if (!name) { toast('أدخل اسم التخصص', 'err'); return; }
+  SPECS.push({name, icon, color:'var(--teal)', services:0, docs:0});
+  closeModal('modal-spec');
+  renderSpecs(SPECS);
+  toast(`✅ تمت إضافة تخصص: ${name}`, 'ok');
+}
+
+// ── RENDER REMINDERS ──
+function renderReminders() {
+  const el = document.getElementById('reminder-toggles');
+  if (!el) return;
+  el.innerHTML = REMINDERS.map((r, i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border2)">
+      <span>${r.icon}</span>
+      <div style="flex:1;font-size:var(--xs);font-weight:600">${r.label}</div>
+      <button class="toggle ${r.on?'on':''}" id="rem-${i}" onclick="toggleReminder(${i})"></button>
+    </div>`).join('');
+}
+
+function toggleReminder(i) {
+  REMINDERS[i].on = !REMINDERS[i].on;
+  const btn = document.getElementById('rem-'+i);
+  btn.classList.toggle('on');
+  toast((REMINDERS[i].on?'✅ تفعيل ':'⏸ إيقاف ') + REMINDERS[i].label, REMINDERS[i].on?'ok':'inf');
+}
+
+// ── RENDER CHART ──
+function renderChart() {
+  const el = document.getElementById('dash-chart');
+  const lbl = document.getElementById('dash-chart-lbl');
+  if (!el) return;
+  const days = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const values = [3200,4100,3800,5200,4700,2100,4800];
+  const max = Math.max(...values);
+  const colors = ['var(--teal)','var(--accent)','var(--teal)','var(--green)','var(--teal)','var(--muted)','var(--teal)'];
+  el.innerHTML = values.map((v,i) =>
+    `<div class="bar" style="height:${v/max*100}%;background:${colors[i]};opacity:.8" title="${days[i]}: ${v.toLocaleString()} ر.س"></div>`
+  ).join('');
+  lbl.innerHTML = days.map(d => `<span>${d.substring(0,3)}</span>`).join('');
+}
+
+// ── MODAL ──
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if(e.target === m) m.classList.remove('open'); });
+});
+
+// ── TOAST ──
+let toastTimer;
+function toast(msg, type = 'inf') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── BILINGUAL SUPPORT ──
+let currentLang = 'ar';
+
+const TRANSLATIONS = {
+  ar: {
+    // Sidebar
+    dashboard: 'لوحة التحكم', patients: 'المرضى', appointments: 'المواعيد',
+    doctors: 'الأطباء', permissions: 'الصلاحيات', invoices: 'الفواتير',
+    whatsapp: 'واتساب & SMS', specialties: 'التخصصات', settings: 'الإعدادات',
+    main: 'الرئيسي', management: 'الإدارة', system: 'النظام',
+    logout: 'تسجيل الخروج',
+    // Login
+    welcome: 'مرحباً بك 👋',
+    loginSub: 'اختر حساباً تجريبياً للدخول الفوري',
+    email: 'البريد الإلكتروني', password: 'كلمة المرور',
+    loginBtn: '🔐 تسجيل الدخول',
+    loginHint: 'هذه نسخة تجريبية — البيانات وهمية للعرض',
+    // Pages
+    dashTitle: 'لوحة التحكم', dashSub: 'عيادة الابتسامة · الرياض',
+    patientsTitle: 'المرضى', patientsSub: '1,247 مريض مسجل',
+    apptsTitle: 'المواعيد', apptsSub: 'إدارة مواعيد المركز',
+    doctorsTitle: 'الأطباء', doctorsSub: '6 أطباء في المركز',
+    permsTitle: 'الصلاحيات', permsSub: 'إدارة أدوار المستخدمين',
+    invTitle: 'الفواتير', invSub: 'إدارة الفواتير والمدفوعات',
+    waTitle: 'واتساب & SMS', waSub: 'الرسائل والتذكيرات التلقائية',
+    specTitle: 'التخصصات', specSub: 'إدارة تخصصات وخدمات المركز',
+    settTitle: 'الإعدادات', settSub: 'إعدادات مركزك الطبي',
+    // Buttons
+    newPatient: '+ مريض جديد', newAppt: '+ موعد جديد',
+    newDoctor: '+ طبيب جديد', newEmployee: '+ موظف جديد',
+    newInvoice: '+ فاتورة جديدة', newSpec: '+ تخصص جديد',
+    save: '💾 حفظ التغييرات', refresh: '🔄 تحديث',
+    broadcastBtn: '📢 بث جماعي',
+    // KPIs
+    totalPatients: 'إجمالي المرضى', todayAppts: 'مواعيد اليوم',
+    monthRevenue: 'إيراد الشهر (ر.س)', rating: 'تقييم المرضى',
+    todaySchedule: '📅 مواعيد اليوم', weekRevenue: '📈 الإيراد الأسبوعي',
+    aiToday: '🤖 AYAN AI اليوم', waMessages: 'رسائل واتساب',
+    aiHandled: 'AI يعالج تلقائياً', responseTime: 'وقت الرد',
+    patientSatisfaction: 'رضا المرضى', viewAll: 'عرض الكل',
+    // Table headers
+    thPatient: 'المريض', thPhone: 'الجوال', thAge: 'العمر',
+    thLastVisit: 'آخر زيارة', thStatus: 'الحالة', thActions: 'إجراءات',
+    thTime: 'الوقت', thDoctor: 'الطبيب', thService: 'الخدمة',
+    thDuration: 'المدة', thInvoice: 'رقم الفاتورة', thAmount: 'المبلغ',
+    thPayment: 'طريقة الدفع', thDate: 'التاريخ',
+    // Status
+    confirmed: 'مؤكد', pending: 'انتظار', done: 'انتهى', active: 'نشط', inactive: 'غير نشط',
+  },
+  en: {
+    // Sidebar
+    dashboard: 'Dashboard', patients: 'Patients', appointments: 'Appointments',
+    doctors: 'Doctors', permissions: 'Permissions', invoices: 'Invoices',
+    whatsapp: 'WhatsApp & SMS', specialties: 'Specialties', settings: 'Settings',
+    main: 'Main', management: 'Management', system: 'System',
+    logout: 'Logout',
+    // Login
+    welcome: 'Welcome Back 👋',
+    loginSub: 'Select a demo account to login instantly',
+    email: 'Email Address', password: 'Password',
+    loginBtn: '🔐 Sign In',
+    loginHint: 'Demo version — sample data for preview only',
+    // Pages
+    dashTitle: 'Dashboard', dashSub: 'Al-Ibtisamah Clinic · Riyadh',
+    patientsTitle: 'Patients', patientsSub: '1,247 registered patients',
+    apptsTitle: 'Appointments', apptsSub: 'Manage clinic appointments',
+    doctorsTitle: 'Doctors', doctorsSub: '6 doctors in the clinic',
+    permsTitle: 'Permissions', permsSub: 'Manage user roles & access',
+    invTitle: 'Invoices', invSub: 'Manage payments & invoices',
+    waTitle: 'WhatsApp & SMS', waSub: 'Messages & automated reminders',
+    specTitle: 'Specialties', specSub: 'Manage clinic specialties & services',
+    settTitle: 'Settings', settSub: 'Configure your clinic settings',
+    // Buttons
+    newPatient: '+ New Patient', newAppt: '+ New Appointment',
+    newDoctor: '+ New Doctor', newEmployee: '+ New Employee',
+    newInvoice: '+ New Invoice', newSpec: '+ New Specialty',
+    save: '💾 Save Changes', refresh: '🔄 Refresh',
+    broadcastBtn: '📢 Broadcast',
+    // KPIs
+    totalPatients: 'Total Patients', todayAppts: "Today's Appointments",
+    monthRevenue: 'Monthly Revenue (SAR)', rating: 'Patient Rating',
+    todaySchedule: '📅 Today\'s Schedule', weekRevenue: '📈 Weekly Revenue',
+    aiToday: '🤖 AYAN AI Today', waMessages: 'WhatsApp Messages',
+    aiHandled: 'AI Auto-handled', responseTime: 'Response Time',
+    patientSatisfaction: 'Patient Satisfaction', viewAll: 'View All',
+    // Table headers
+    thPatient: 'Patient', thPhone: 'Phone', thAge: 'Age',
+    thLastVisit: 'Last Visit', thStatus: 'Status', thActions: 'Actions',
+    thTime: 'Time', thDoctor: 'Doctor', thService: 'Service',
+    thDuration: 'Duration', thInvoice: 'Invoice #', thAmount: 'Amount',
+    thPayment: 'Payment', thDate: 'Date',
+    // Status
+    confirmed: 'Confirmed', pending: 'Pending', done: 'Done', active: 'Active', inactive: 'Inactive',
+  }
+};
+
+function t(key) {
+  return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ar'][key] || key;
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'ar' ? 'en' : 'ar';
+  const isEn = currentLang === 'en';
+  
+  // Update HTML attributes for RTL/LTR
+  document.documentElement.lang = currentLang;
+  document.documentElement.dir = isEn ? 'ltr' : 'rtl';
+  document.body.style.direction = isEn ? 'ltr' : 'rtl';
+  
+  // Update language buttons
+  ['langBtn','langBtnLogin'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.textContent = isEn ? 'عر' : 'EN';
+  });
+
+  // Update sidebar nav labels
+  const navMap = [
+    [0,'dashboard'],[1,'patients'],[2,'appointments'],
+    [3,'doctors'],[4,'permissions'],[5,'invoices'],
+    [6,'whatsapp'],[7,'specialties'],[8,'settings']
+  ];
+  document.querySelectorAll('.nav-item').forEach((item, idx) => {
+    const label = item.querySelector('.ni-label');
+    if (label && navMap[idx]) label.textContent = t(navMap[idx][1]);
+  });
+
+  // Update section headers
+  const sections = document.querySelectorAll('.sb-section');
+  if (sections[0]) sections[0].textContent = t('main');
+  if (sections[1]) sections[1].textContent = t('management');
+  if (sections[2]) sections[2].textContent = t('system');
+
+  // Update logout
+  const logoutSpan = document.querySelector('.logout-btn span');
+  if (logoutSpan) logoutSpan.textContent = t('logout');
+
+  // Update login screen
+  const loginTitle = document.querySelector('.login-title');
+  if (loginTitle) loginTitle.textContent = t('welcome');
+  const loginSub = document.querySelector('.login-sub');
+  if (loginSub) loginSub.textContent = t('loginSub');
+  const loginHint = document.querySelector('.login-hint');
+  if (loginHint) loginHint.textContent = t('loginHint');
+  const loginBtn = document.querySelector('.btn-login');
+  if (loginBtn) loginBtn.textContent = t('loginBtn');
+  const emailLabel = document.querySelector('#email-inp')?.previousElementSibling;
+  if (emailLabel) emailLabel.textContent = t('email');
+  const passLabel = document.querySelector('#pass-inp')?.previousElementSibling;
+  if (passLabel) passLabel.textContent = t('password');
+
+  // Update page headers
+  const pageHeaders = {
+    'page-dashboard': ['dashTitle','dashSub'],
+    'page-patients': ['patientsTitle','patientsSub'],
+    'page-appointments': ['apptsTitle','apptsSub'],
+    'page-doctors': ['doctorsTitle','doctorsSub'],
+    'page-permissions': ['permsTitle','permsSub'],
+    'page-invoices': ['invTitle','invSub'],
+    'page-whatsapp': ['waTitle','waSub'],
+    'page-specialties': ['specTitle','specSub'],
+    'page-settings': ['settTitle','settSub'],
+  };
+  Object.entries(pageHeaders).forEach(([pageId, [titleKey, subKey]]) => {
+    const page = document.getElementById(pageId);
+    if (!page) return;
+    const title = page.querySelector('.ph-title');
+    const sub = page.querySelector('.ph-sub');
+    if (title) {
+      // preserve icon
+      const icon = title.textContent.match(/[\u{1F000}-\u{1FFFF}]|[\u2600-\u27FF]/gu)?.[0] || '';
+      title.textContent = icon + ' ' + t(titleKey).replace(/^[\u{1F000}-\u{1FFFF}\u2600-\u27FF\s]/gu,'').trim();
+    }
+    if (sub) sub.textContent = t(subKey);
+  });
+
+  // Update KPI labels in dashboard
+  const kpiLabels = document.querySelectorAll('#page-dashboard .kc-lbl');
+  const kpiKeys = ['totalPatients','todayAppts','monthRevenue','rating'];
+  kpiLabels.forEach((el,i) => { if(kpiKeys[i]) el.textContent = t(kpiKeys[i]); });
+
+  // Update action buttons
+  const btnMap = [
+    ['.page-header .btn-p', isEn ? 'New Patient' : '+ مريض جديد'],
+  ];
+
+  // Update table headers for patients
+  const pThs = document.querySelectorAll('#page-patients .tbl th');
+  const pThKeys = ['thPatient','thPhone','thAge','thLastVisit','thStatus','thActions'];
+  pThs.forEach((th,i) => { if(pThKeys[i]) th.textContent = t(pThKeys[i]); });
+
+  // Update table headers for appointments
+  const aThs = document.querySelectorAll('#page-appointments .tbl th');
+  const aThKeys = ['thTime','thPatient','thDoctor','thService','thDuration','thStatus','thActions'];
+  aThs.forEach((th,i) => { if(aThKeys[i]) th.textContent = t(aThKeys[i]); });
+
+  // Update AI stats
+  const aiStats = document.querySelectorAll('#page-dashboard .stat-k');
+  const aiKeys = ['waMessages','aiHandled','responseTime','patientSatisfaction'];
+  aiStats.forEach((el,i) => { if(aiKeys[i]) el.textContent = t(aiKeys[i]); });
+
+  // Re-render to update any remaining text
+  renderPatients(PATIENTS);
+
+  toast(isEn ? '🌐 Switched to English' : '🌐 تم التبديل للعربية', 'ok');
+}
+
+</script>
 </body>
 </html>
