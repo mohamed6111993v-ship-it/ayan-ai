@@ -181,17 +181,30 @@ html,body{height:100%;font-family:'Cairo',sans-serif;background:var(--bg);color:
       <button onclick="document.getElementById('screen-setup').classList.add('active');document.getElementById('screen-login').classList.remove('active')" style="background:none;border:none;cursor:pointer;color:var(--muted2);font-size:.65rem">⚙️ تغيير المفتاح</button>
     </div>
     <div class="login-title">مرحباً بك 👋</div>
-    <div class="login-sub">سجّل دخولك للمنصة الحقيقية</div>
+    <div class="login-sub">سجّل دخولك باستخدام حساب جوجل</div>
+
+    <!-- Google OAuth Button -->
+    <button id="lbtn" onclick="doGoogleLogin()" style="width:100%;padding:13px;border-radius:50px;background:#fff;color:#1f1f1f;font-family:Cairo,sans-serif;font-size:var(--base);font-weight:700;border:none;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.15)">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+      تسجيل الدخول بـ Google
+    </button>
+
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;color:var(--muted);font-size:var(--xs)">
+      <div style="flex:1;height:1px;background:var(--border)"></div>أو<div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+
+    <!-- Email/Password fallback -->
     <div class="field">
       <label class="fl">البريد الإلكتروني</label>
-      <input class="fi" id="ein" value="owner@ayanclinic.com" style="direction:ltr">
+      <input class="fi" id="ein" placeholder="email@example.com" style="direction:ltr">
     </div>
     <div class="field">
       <label class="fl">كلمة المرور</label>
-      <input class="fi" id="pin" type="password" value="demo1234">
+      <input class="fi" id="pin" type="password" placeholder="كلمة المرور">
     </div>
-    <button class="btn-login" id="lbtn" onclick="doLogin()">🔐 تسجيل الدخول</button>
-    <div style="text-align:center;font-size:var(--xs);color:var(--muted2);margin-top:10px">متصل بـ Supabase — mahcdmonvolsgbelosya</div>
+    <button onclick="doLogin()" style="width:100%;padding:11px;border-radius:50px;background:var(--s2);border:1px solid var(--border);color:var(--muted2);font-family:Cairo,sans-serif;font-size:var(--sm);font-weight:700;cursor:pointer;margin-top:4px">🔐 دخول بكلمة المرور</button>
+
+    <div style="text-align:center;font-size:var(--xs);color:var(--muted2);margin-top:12px">متصل بـ Supabase — mahcdmonvolsgbelosya</div>
   </div>
 </div>
 
@@ -502,42 +515,94 @@ async function checkConn(){
 }
 
 // ══ AUTH ══
+async function doGoogleLogin(){
+  if(!sb){toast('أنشئ الاتصال أولاً','err');return;}
+  const btn=document.getElementById('lbtn');
+  btn.style.opacity='.6';btn.disabled=true;
+  btn.innerHTML='<div class="spin" style="border-top-color:#4285F4;display:inline-block"></div> جاري الاتصال بـ Google...';
+  try{
+    const {data, error}=await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options:{
+        // الرابط الصحيح بعد تسجيل الدخول
+        redirectTo: 'https://mohamed6111993v-ship-it.github.io/ayan-ai/',
+        // إعدادات Google OAuth
+        queryParams:{
+          access_type: 'offline',
+          prompt: 'consent',
+          // Client ID المسجّل في Google Cloud
+          client_id: '66721884352-jis44ubslolv7lpadh1aroruatnrlbip.apps.googleusercontent.com'
+        },
+        scopes: 'email profile'
+      }
+    });
+    if(error) throw error;
+    // Google سيفتح نافذة تسجيل الدخول تلقائياً
+  }catch(e){
+    toast('❌ '+e.message,'err');
+    btn.style.opacity='1';btn.disabled=false;
+    btn.innerHTML=GOOGLE_BTN_HTML;
+  }
+}
+
+// HTML زر Google ثابت
+const GOOGLE_BTN_HTML = '<svg width="20" height="20" viewBox="0 0 48 48" style="flex-shrink:0"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> تسجيل الدخول بـ Google';
+
 async function doLogin(){
   if(!sb){toast('أنشئ الاتصال أولاً','err');return;}
   const email=document.getElementById('ein').value.trim();
   const pass=document.getElementById('pin').value;
   if(!email||!pass){toast('أدخل البريد وكلمة المرور','err');return;}
-  const btn=document.getElementById('lbtn');
-  btn.textContent='⏳ جاري الدخول...';btn.disabled=true;
   try{
     const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
     if(error)throw error;
     await afterLogin(data.user);
   }catch(e){
     toast('❌ '+e.message,'err');
-    btn.textContent='🔐 تسجيل الدخول';btn.disabled=false;
   }
 }
 
 async function afterLogin(user){
-  // حاول user_profiles أولاً
-  let name=user.email, role='مالك', tenantId=null;
-  const {data:prof}=await sb.from('user_profiles').select('*,centers(name)').eq('id',user.id).single();
-  if(prof){
-    name=prof.name||user.email; role=prof.role||'مالك'; tenantId=prof.tenant_id;
-    document.getElementById('cname').textContent=prof.centers?.name||'مركزك الطبي';
-  } else {
-    // fallback: جدول users
-    const {data:u}=await sb.from('users').select('*,centers(name)').eq('email',user.email).single();
-    if(u){name=u.name;role=u.role;tenantId=u.tenant_id;document.getElementById('cname').textContent=u.centers?.name||'مركزك الطبي';}
-  }
-  TID=tenantId;
-  document.getElementById('sbav').textContent=(name||'م')[0];
-  document.getElementById('sbname').textContent=name;
-  document.getElementById('sbrole').textContent=role;
+  let name = user.user_metadata?.full_name || user.user_metadata?.name || user.email;
+  let role = 'مالك';
+  let tenantId = null;
+  let centerName = 'مركزك الطبي';
+
+  try {
+    // حاول user_profiles
+    const {data:prof} = await sb.from('user_profiles').select('*,centers(name)').eq('id',user.id).single();
+    if(prof){
+      name = prof.name || name;
+      role = prof.role || role;
+      tenantId = prof.tenant_id;
+      centerName = prof.centers?.name || centerName;
+    } else {
+      // حاول جدول users
+      const {data:u} = await sb.from('users').select('*,centers(name)').eq('email',user.email).single();
+      if(u){
+        name = u.name || name;
+        role = u.role || role;
+        tenantId = u.tenant_id;
+        centerName = u.centers?.name || centerName;
+      } else {
+        // مستخدم جديد عبر Google — أضفه تلقائياً
+        if(!tenantId){
+          tenantId = 'CLN-DEMO-001'; // المركز التجريبي
+          toast('مرحباً! تم ربط حسابك بالمركز التجريبي','inf');
+        }
+      }
+    }
+  } catch(e){ console.warn('Profile fetch:', e.message); }
+
+  TID = tenantId;
+  document.getElementById('cname').textContent = centerName;
+  document.getElementById('sbav').textContent = (name||'م')[0].toUpperCase();
+  document.getElementById('sbname').textContent = name;
+  document.getElementById('sbrole').textContent = role;
   document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-setup').classList.remove('active');
   document.getElementById('screen-app').classList.add('active');
-  toast('مرحباً '+name+' ✅','ok');
+  toast('مرحباً ' + name.split(' ')[0] + ' ✅','ok');
   loadDash();
 }
 
@@ -808,14 +873,25 @@ async function saveSett(){
 
 // ══ INIT ══
 window.addEventListener('load',async()=>{
-  // ابدأ مباشرة بشاشة Login مع المفتاح الافتراضي
   document.getElementById('screen-login').classList.add('active');
   initSB();
-  // تحقق من جلسة موجودة
+
+  // انتظر Supabase يكتمل
+  await new Promise(r=>setTimeout(r,500));
+
+  // تحقق من جلسة موجودة أو OAuth callback
   const {data:{session}}=await sb.auth.getSession();
   if(session){
     await afterLogin(session.user);
+    return;
   }
+
+  // استمع لتغييرات Auth (OAuth redirect)
+  sb.auth.onAuthStateChange(async(event,session)=>{
+    if(event==='SIGNED_IN' && session){
+      await afterLogin(session.user);
+    }
+  });
 });
 </script>
 </body>
