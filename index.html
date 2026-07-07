@@ -2,560 +2,1181 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>AYAN AI — منصة إدارة العيادات</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
 <style>
+/* ═══════════════════════════════════════
+   AYAN AI — Design System
+═══════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
 :root{
-  --bg:#07090E;--surface:#0B1220;--s2:#101828;
-  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.04);
-  --card:rgba(255,255,255,.035);
-  --teal:#00C8A0;--accent:#00B4D8;--green:#00C896;--gold:#D4A843;
-  --red:#E05C5C;--purple:#7B5EA7;--white:#EEF2F7;--muted:#4A6080;--muted2:#6B84A0;
-  --xs:.7rem;--sm:.8rem;--base:.88rem;--lg:1.05rem;--r:10px;--rs:7px;--rl:16px;
+  /* Colors */
+  --bg:         #060A12;
+  --surface:    #0C1423;
+  --surface2:   #101B2E;
+  --surface3:   #152035;
+  --border:     rgba(255,255,255,.06);
+  --border2:    rgba(255,255,255,.03);
+
+  --teal:       #00D4AA;
+  --teal-dim:   rgba(0,212,170,.08);
+  --teal-glow:  rgba(0,212,170,.2);
+  --blue:       #3B82F6;
+  --blue-dim:   rgba(59,130,246,.08);
+  --green:      #10B981;
+  --green-dim:  rgba(16,185,129,.08);
+  --amber:      #F59E0B;
+  --amber-dim:  rgba(245,158,11,.08);
+  --red:        #EF4444;
+  --red-dim:    rgba(239,68,68,.08);
+  --purple:     #8B5CF6;
+  --purple-dim: rgba(139,92,246,.08);
+
+  --text:       #E8EDF5;
+  --text2:      #8898B0;
+  --text3:      #4A5E78;
+
+  /* Typography */
+  --font:       'Cairo', sans-serif;
+  --mono:       'Space Grotesk', sans-serif;
+
+  /* Sizes */
+  --xs:  .68rem;
+  --sm:  .78rem;
+  --md:  .88rem;
+  --lg:  1rem;
+  --xl:  1.15rem;
+  --2xl: 1.4rem;
+
+  /* Radius */
+  --r-sm: 6px;
+  --r:    10px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+
+  /* Sidebar */
+  --sb-w: 220px;
 }
-html,body{height:100%;font-family:'Cairo',sans-serif;background:var(--bg);color:var(--white);-webkit-font-smoothing:antialiased;overflow:hidden}
-::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden}
+
+html,body{
+  height:100%;
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ═══ SCREENS ═══ */
+.screen{
+  position:absolute;inset:0;
+  display:none;flex-direction:column;
+  overflow:hidden;
+}
 .screen.active{display:flex}
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface);border:1px solid var(--border);border-radius:30px;padding:9px 20px;font-size:var(--xs);font-weight:600;opacity:0;transition:all .3s;z-index:9999;white-space:nowrap;pointer-events:none}
+
+/* ═══ TOAST ═══ */
+#toast{
+  position:fixed;bottom:24px;left:50%;
+  transform:translateX(-50%) translateY(60px);
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:30px;padding:9px 20px;
+  font-size:var(--xs);font-weight:600;
+  opacity:0;transition:all .25s;
+  z-index:9999;white-space:nowrap;pointer-events:none;
+  display:flex;align-items:center;gap:7px;
+}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-#toast.ok{border-color:rgba(0,200,150,.3);color:var(--green)}
-#toast.err{border-color:rgba(224,92,92,.3);color:var(--red)}
-#toast.inf{border-color:rgba(0,200,160,.3);color:var(--teal)}
+#toast.ok {border-color:rgba(16,185,129,.3);color:var(--green)}
+#toast.err{border-color:rgba(239,68,68,.3);color:var(--red)}
+#toast.inf{border-color:rgba(0,212,170,.25);color:var(--teal)}
 
-/* ── SETUP SCREEN ── */
-#screen-setup{background:var(--bg);align-items:center;justify-content:center;padding:20px}
-.setup-card{background:var(--surface);border:1px solid rgba(212,168,67,.3);border-radius:20px;padding:28px;width:100%;max-width:480px}
-.setup-title{font-size:1.1rem;font-weight:800;margin-bottom:6px;color:var(--gold)}
-.setup-sub{font-size:var(--xs);color:var(--muted2);margin-bottom:20px;line-height:1.7}
-.setup-steps{background:var(--s2);border-radius:var(--r);padding:14px;margin-bottom:16px;font-size:var(--xs);line-height:2;color:var(--muted2)}
-.setup-steps b{color:var(--white)}
+/* ═══ LOGIN ═══ */
+#screen-login{
+  background:var(--bg);
+  align-items:center;justify-content:center;
+  padding:20px;
+}
 
-/* ── LOGIN ── */
-#screen-login{background:var(--bg);align-items:center;justify-content:center;padding:20px}
-.login-bg{position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(0,180,216,.08),transparent 65%);pointer-events:none}
-.login-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px 28px;width:100%;max-width:420px;position:relative;z-index:1}
-.logo-wrap{display:flex;align-items:center;gap:8px;margin-bottom:20px;justify-content:center}
-.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 10px var(--teal)}
-.logo-text{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.1rem}
-.logo-badge{background:rgba(0,200,160,.12);border:1px solid rgba(0,200,160,.2);color:var(--teal);font-size:.6rem;font-weight:700;padding:2px 8px;border-radius:4px;margin-right:4px}
-.conn-bar{display:flex;align-items:center;gap:7px;font-size:var(--xs);padding:7px 12px;border-radius:20px;border:1px solid var(--border);margin-bottom:18px}
-.cdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.login-title{font-size:1.2rem;font-weight:800;margin-bottom:4px;text-align:center}
-.login-sub{font-size:var(--xs);color:var(--muted2);text-align:center;margin-bottom:20px}
-.field{margin-bottom:13px}
-.fl{font-size:var(--xs);font-weight:600;color:var(--muted2);margin-bottom:5px;display:block}
-.fi{width:100%;background:var(--s2);border:1.5px solid var(--border);border-radius:var(--rs);color:var(--white);font-family:'Cairo',sans-serif;font-size:var(--sm);padding:10px 13px;outline:none;transition:border-color .2s}
-.fi:focus{border-color:var(--teal)}
-.btn-login{width:100%;padding:13px;border-radius:50px;background:linear-gradient(135deg,var(--teal),var(--accent));color:#07090E;font-family:'Cairo',sans-serif;font-size:var(--base);font-weight:800;border:none;cursor:pointer;transition:all .2s;margin-top:6px}
-.btn-login:disabled{opacity:.5;cursor:not-allowed}
+.login-bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 55% 45% at 50% -5%, rgba(0,212,170,.09) 0%, transparent 65%),
+    radial-gradient(ellipse 30% 30% at 80% 80%, rgba(59,130,246,.05) 0%, transparent 55%);
+  pointer-events:none;
+}
 
-/* ── APP ── */
+.login-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-xl);
+  padding:36px 32px;
+  width:100%;max-width:420px;
+  position:relative;z-index:1;
+  box-shadow:0 24px 80px rgba(0,0,0,.4);
+}
+
+.brand{
+  display:flex;align-items:center;justify-content:center;
+  gap:8px;margin-bottom:28px;
+}
+.brand-icon{
+  width:36px;height:36px;
+  background:linear-gradient(135deg,var(--teal),var(--blue));
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;
+}
+.brand-name{
+  font-family:var(--mono);
+  font-weight:700;font-size:1.2rem;
+  letter-spacing:-.5px;
+}
+.brand-tag{
+  background:var(--teal-dim);
+  border:1px solid rgba(0,212,170,.2);
+  color:var(--teal);
+  font-size:.58rem;font-weight:700;
+  padding:2px 7px;border-radius:4px;
+}
+
+.conn-pill{
+  display:flex;align-items:center;gap:7px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:6px 12px;margin-bottom:22px;
+  font-size:var(--xs);
+}
+.conn-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+.login-title{
+  font-size:var(--xl);font-weight:800;
+  text-align:center;margin-bottom:4px;
+}
+.login-sub{
+  font-size:var(--xs);color:var(--text2);
+  text-align:center;margin-bottom:24px;
+}
+
+/* Google Button */
+.btn-google{
+  width:100%;padding:13px;
+  background:#fff;color:#1f1f1f;
+  border:none;border-radius:50px;
+  font-family:var(--font);font-size:var(--md);font-weight:700;
+  cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 2px 12px rgba(0,0,0,.2);
+}
+.btn-google:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.btn-google:active{transform:translateY(0)}
+.btn-google:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+.divider{
+  display:flex;align-items:center;gap:10px;
+  color:var(--text3);font-size:var(--xs);
+  margin:16px 0;
+}
+.divider::before,.divider::after{
+  content:'';flex:1;
+  height:1px;background:var(--border);
+}
+
+.field{margin-bottom:12px}
+.label{
+  display:block;font-size:var(--xs);
+  font-weight:600;color:var(--text2);margin-bottom:5px;
+}
+.input{
+  width:100%;
+  background:var(--surface2);
+  border:1.5px solid var(--border);
+  border-radius:var(--r);
+  color:var(--text);
+  font-family:var(--font);font-size:var(--sm);
+  padding:10px 13px;outline:none;
+  transition:border-color .2s;
+}
+.input:focus{border-color:var(--teal)}
+
+.btn-email{
+  width:100%;padding:11px;
+  background:var(--surface2);
+  border:1.5px solid var(--border);
+  border-radius:50px;
+  color:var(--text2);
+  font-family:var(--font);font-size:var(--sm);font-weight:700;
+  cursor:pointer;transition:all .2s;margin-top:4px;
+}
+.btn-email:hover{border-color:var(--teal);color:var(--text)}
+
+.login-note{
+  text-align:center;font-size:var(--xs);
+  color:var(--text3);margin-top:14px;
+}
+
+/* ═══ APP LAYOUT ═══ */
 #screen-app{flex-direction:row}
-.sidebar{width:215px;min-width:215px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;transition:width .3s}
-.sidebar.collapsed{width:52px;min-width:52px}
-.sb-hdr{padding:12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
-.sb-logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:.85rem;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;flex:1}
-.sb-tog{width:26px;height:26px;border-radius:6px;background:var(--card);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0}
-.sb-user{padding:10px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;overflow:hidden}
-.sb-av{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:#07090E;flex-shrink:0}
-.sb-name{font-size:var(--xs);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sb-role{font-size:.6rem;color:var(--muted2)}
-.sb-nav{flex:1;padding:6px 0}
-.sb-sec{font-size:.58rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:8px 14px 3px;white-space:nowrap;overflow:hidden}
-.ni{display:flex;align-items:center;gap:9px;padding:8px 14px;cursor:pointer;transition:all .18s;border-right:3px solid transparent}
-.ni:hover{background:rgba(255,255,255,.04)}
-.ni.on{background:rgba(0,200,160,.08);border-right-color:var(--teal)}
-.ni.on .nil{color:var(--teal)}
-.nii{width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:.88rem;flex-shrink:0}
-.nil{font-size:var(--xs);font-weight:600;white-space:nowrap;overflow:hidden}
-.nib{margin-right:auto;background:var(--teal);color:#07090E;font-size:.55rem;font-weight:700;padding:1px 5px;border-radius:3px;flex-shrink:0}
-.sidebar.collapsed .nil,.sidebar.collapsed .sb-sec,.sidebar.collapsed .sb-name,.sidebar.collapsed .sb-role,.sidebar.collapsed .sb-logo span,.sidebar.collapsed .nib{display:none}
-.sidebar.collapsed .ni{justify-content:center;padding:10px}
-.sb-ft{padding:10px;border-top:1px solid var(--border)}
-.lout{width:100%;padding:7px;border-radius:var(--rs);background:rgba(224,92,92,.08);border:1px solid rgba(224,92,92,.2);color:var(--red);font-family:'Cairo',sans-serif;font-size:var(--xs);font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+
+/* ═══ SIDEBAR ═══ */
+.sidebar{
+  width:var(--sb-w);min-width:var(--sb-w);
+  background:var(--surface);
+  border-left:1px solid var(--border);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  transition:width .25s,min-width .25s;
+}
+.sidebar.slim{width:56px;min-width:56px}
+
+.sb-brand{
+  padding:14px 12px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:9px;
+}
+.sb-brand-ico{
+  width:32px;height:32px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--teal),var(--blue));
+  border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;
+}
+.sb-brand-name{
+  font-family:var(--mono);font-weight:700;
+  font-size:.88rem;white-space:nowrap;
+  overflow:hidden;flex:1;
+}
+.sb-toggle{
+  width:24px;height:24px;flex-shrink:0;
+  border-radius:6px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  cursor:pointer;color:var(--text2);
+  font-size:.75rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.sb-toggle:hover{border-color:var(--teal);color:var(--teal)}
+
+.sb-user{
+  padding:11px 12px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:9px;
+  overflow:hidden;
+}
+.sb-av{
+  width:32px;height:32px;flex-shrink:0;
+  border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.8rem;font-weight:700;color:#060A12;
+}
+.sb-info{overflow:hidden}
+.sb-name{
+  font-size:var(--xs);font-weight:700;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.sb-role{font-size:.6rem;color:var(--text2)}
+
+.sb-nav{flex:1;overflow-y:auto;padding:6px 0}
+.sb-group{
+  font-size:.56rem;font-weight:700;
+  letter-spacing:1.8px;text-transform:uppercase;
+  color:var(--text3);
+  padding:10px 14px 4px;
+  white-space:nowrap;overflow:hidden;
+}
+.sb-item{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 14px;cursor:pointer;
+  border-right:3px solid transparent;
+  transition:all .18s;position:relative;
+}
+.sb-item:hover{background:rgba(255,255,255,.03)}
+.sb-item.on{
+  background:var(--teal-dim);
+  border-right-color:var(--teal);
+}
+.sb-item.on .sb-item-label{color:var(--teal)}
+.sb-item-icon{
+  width:18px;height:18px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;
+}
+.sb-item-label{
+  font-size:var(--xs);font-weight:600;
+  white-space:nowrap;overflow:hidden;flex:1;
+}
+.sb-badge{
+  background:var(--teal);color:#060A12;
+  font-size:.52rem;font-weight:800;
+  padding:1px 5px;border-radius:3px;flex-shrink:0;
+}
+
+.sidebar.slim .sb-brand-name,
+.sidebar.slim .sb-info,
+.sidebar.slim .sb-group,
+.sidebar.slim .sb-item-label,
+.sidebar.slim .sb-badge{display:none}
+.sidebar.slim .sb-item{justify-content:center;padding:10px}
+.sidebar.slim .sb-brand{justify-content:center}
+.sidebar.slim .sb-toggle{display:none}
+.sidebar.slim .sb-user{justify-content:center}
+
+.sb-footer{
+  padding:10px;
+  border-top:1px solid var(--border);
+}
+.btn-logout{
+  width:100%;padding:8px;
+  border-radius:var(--r);
+  background:var(--red-dim);
+  border:1px solid rgba(239,68,68,.15);
+  color:var(--red);
+  font-family:var(--font);font-size:var(--xs);font-weight:700;
+  cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.btn-logout:hover{background:rgba(239,68,68,.15)}
+.sidebar.slim .btn-logout span{display:none}
+
+/* ═══ MAIN CONTENT ═══ */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* ═══ PAGES ═══ */
 .page{display:none;flex:1;flex-direction:column;overflow:hidden}
 .page.on{display:flex}
-.pi{flex:1;overflow-y:auto;padding:14px}
-.phdr{padding:11px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
-.pht{font-size:var(--lg);font-weight:800;display:flex;align-items:center;gap:7px}
-.phs{font-size:var(--xs);color:var(--muted2);margin-top:1px}
-.pha{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
-.kgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:14px}
-.kc{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:13px 15px;position:relative;overflow:hidden;cursor:pointer;transition:all .2s}
-.kc:hover{transform:translateY(-2px)}
-.kc::before{content:'';position:absolute;top:0;right:0;width:3px;height:100%}
-.ct::before{background:var(--teal)}.ca::before{background:var(--accent)}.cg::before{background:var(--green)}.co::before{background:var(--gold)}
-.ki{width:34px;height:34px;border-radius:var(--rs);display:flex;align-items:center;justify-content:center;font-size:1rem;margin-bottom:7px}
-.it{background:rgba(0,200,160,.1)}.ia{background:rgba(0,180,216,.1)}.ig{background:rgba(0,200,150,.1)}.io{background:rgba(212,168,67,.1)}
-.kv{font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:700;line-height:1;margin-bottom:2px}
-.kl{font-size:var(--xs);color:var(--muted2)}
-.pnl{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:12px}
-.ph2{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border)}
-.pt2{font-size:var(--sm);font-weight:700}
-.pa2{font-size:var(--xs);color:var(--accent);cursor:pointer;background:none;border:none;font-family:'Cairo',sans-serif;padding:0;font-weight:600}
-.pb{padding:14px}
-.tbl{width:100%;border-collapse:collapse}
-.tbl th{font-size:var(--xs);font-weight:700;color:var(--muted);padding:7px 10px;text-align:right;border-bottom:1px solid var(--border);background:rgba(0,0,0,.12);white-space:nowrap}
-.tbl td{font-size:var(--xs);padding:9px 10px;border-bottom:1px solid var(--border2);vertical-align:middle}
-.tbl tr:last-child td{border-bottom:none}
-.tbl tr:hover td{background:rgba(255,255,255,.015);cursor:pointer}
-.tw{overflow-x:auto}
-.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:.6rem;font-weight:700;white-space:nowrap}
-.bg{background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.2);color:var(--green)}
-.bgo{background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.2);color:var(--gold)}
-.br{background:rgba(224,92,92,.1);border:1px solid rgba(224,92,92,.2);color:var(--red)}
-.bb{background:rgba(0,180,216,.1);border:1px solid rgba(0,180,216,.2);color:var(--accent)}
-.bt{background:rgba(0,200,160,.1);border:1px solid rgba(0,200,160,.2);color:var(--teal)}
-.btn{padding:7px 14px;border-radius:50px;font-family:'Cairo',sans-serif;font-size:var(--xs);font-weight:700;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:5px}
-.bp{background:var(--teal);color:#07090E}.bp:hover{opacity:.85}
-.bk{background:var(--card);border:1px solid var(--border);color:var(--muted2)}.bk:hover{border-color:var(--teal);color:var(--white)}
-.brr{background:rgba(224,92,92,.1);border:1px solid rgba(224,92,92,.2);color:var(--red)}
-.av{width:28px;height:28px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#07090E;flex-shrink:0}
-.mov{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:16px}
-.mov.open{display:flex}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:22px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto}
-.mhdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-.mtit{font-size:var(--lg);font-weight:800}
-.mx{background:none;border:none;cursor:pointer;color:var(--muted2);font-size:1.1rem;padding:0}
-.mf{margin-bottom:12px}
-.ml{font-size:var(--xs);font-weight:600;color:var(--muted2);margin-bottom:5px;display:block}
-.mi{width:100%;background:var(--s2);border:1.5px solid var(--border);border-radius:var(--rs);color:var(--white);font-family:'Cairo',sans-serif;font-size:var(--xs);padding:9px 12px;outline:none;transition:border-color .2s;-webkit-appearance:none}
-.mi:focus{border-color:var(--teal)}
-.mr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.mft{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
-.sr{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border2);font-size:var(--xs)}
-.sr:last-child{border-bottom:none}
-.sk{color:var(--muted2)}.sv{font-weight:700}
-.ld{display:flex;align-items:center;justify-content:center;padding:36px;color:var(--muted2);font-size:var(--sm);gap:8px}
-.spin{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:sp .8s linear infinite;flex-shrink:0}
-@keyframes sp{to{transform:rotate(360deg)}}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.5)}}
-@media(max-width:768px){.kgrid{grid-template-columns:1fr 1fr}.g2,.g3{grid-template-columns:1fr}.sidebar{width:52px;min-width:52px}.sidebar .nil,.sidebar .sb-sec,.sidebar .sb-name,.sidebar .sb-role,.sidebar .sb-logo span,.sidebar .nib{display:none}.sidebar .ni{justify-content:center;padding:10px}}
+
+.page-head{
+  padding:12px 18px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+  flex-shrink:0;
+  display:flex;align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;gap:10px;
+}
+.page-title{
+  font-size:var(--xl);font-weight:800;
+  display:flex;align-items:center;gap:8px;
+}
+.page-sub{font-size:var(--xs);color:var(--text2);margin-top:2px}
+.page-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+.page-body{flex:1;overflow-y:auto;padding:16px}
+
+/* ═══ CARDS / KPIs ═══ */
+.kpi-row{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;margin-bottom:16px;
+}
+.kpi{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-lg);
+  padding:14px 16px;
+  position:relative;overflow:hidden;
+  cursor:pointer;transition:all .2s;
+}
+.kpi::after{
+  content:'';
+  position:absolute;top:0;right:0;
+  width:3px;height:100%;
+}
+.kpi:hover{transform:translateY(-2px);border-color:rgba(0,212,170,.15)}
+.kpi-t::after{background:var(--teal)}
+.kpi-b::after{background:var(--blue)}
+.kpi-g::after{background:var(--green)}
+.kpi-a::after{background:var(--amber)}
+.kpi-r::after{background:var(--red)}
+.kpi-p::after{background:var(--purple)}
+
+.kpi-icon{
+  width:34px;height:34px;
+  border-radius:var(--r-sm);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;margin-bottom:9px;
+}
+.kpi-t .kpi-icon{background:var(--teal-dim)}
+.kpi-b .kpi-icon{background:var(--blue-dim)}
+.kpi-g .kpi-icon{background:var(--green-dim)}
+.kpi-a .kpi-icon{background:var(--amber-dim)}
+.kpi-r .kpi-icon{background:var(--red-dim)}
+.kpi-p .kpi-icon{background:var(--purple-dim)}
+
+.kpi-val{
+  font-family:var(--mono);
+  font-size:1.6rem;font-weight:700;
+  line-height:1;margin-bottom:3px;
+}
+.kpi-t .kpi-val{color:var(--teal)}
+.kpi-b .kpi-val{color:var(--blue)}
+.kpi-g .kpi-val{color:var(--green)}
+.kpi-a .kpi-val{color:var(--amber)}
+.kpi-r .kpi-val{color:var(--red)}
+.kpi-p .kpi-val{color:var(--purple)}
+
+.kpi-label{font-size:var(--xs);color:var(--text2)}
+
+/* ═══ PANELS ═══ */
+.panel{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-lg);
+  overflow:hidden;margin-bottom:14px;
+}
+.panel-head{
+  display:flex;align-items:center;
+  justify-content:space-between;
+  padding:11px 15px;
+  border-bottom:1px solid var(--border);
+}
+.panel-title{font-size:var(--sm);font-weight:700}
+.panel-action{
+  font-size:var(--xs);color:var(--blue);
+  background:none;border:none;cursor:pointer;
+  font-family:var(--font);font-weight:600;padding:0;
+}
+.panel-body{padding:14px}
+
+/* ═══ TABLES ═══ */
+.table-wrap{overflow-x:auto}
+.table{width:100%;border-collapse:collapse}
+.table th{
+  font-size:var(--xs);font-weight:700;
+  color:var(--text2);
+  padding:8px 11px;
+  text-align:right;
+  border-bottom:1px solid var(--border);
+  background:rgba(0,0,0,.15);
+  white-space:nowrap;
+}
+.table td{
+  font-size:var(--xs);
+  padding:10px 11px;
+  border-bottom:1px solid var(--border2);
+  vertical-align:middle;
+}
+.table tr:last-child td{border-bottom:none}
+.table tbody tr:hover td{background:rgba(255,255,255,.015);cursor:pointer}
+
+/* ═══ BADGES ═══ */
+.badge{
+  display:inline-flex;align-items:center;
+  padding:2px 8px;border-radius:4px;
+  font-size:.6rem;font-weight:700;white-space:nowrap;
+}
+.badge-g {background:var(--green-dim);border:1px solid rgba(16,185,129,.2);color:var(--green)}
+.badge-a {background:var(--amber-dim);border:1px solid rgba(245,158,11,.2);color:var(--amber)}
+.badge-r {background:var(--red-dim);border:1px solid rgba(239,68,68,.2);color:var(--red)}
+.badge-b {background:var(--blue-dim);border:1px solid rgba(59,130,246,.2);color:var(--blue)}
+.badge-t {background:var(--teal-dim);border:1px solid rgba(0,212,170,.2);color:var(--teal)}
+.badge-p {background:var(--purple-dim);border:1px solid rgba(139,92,246,.2);color:var(--purple)}
+
+/* ═══ BUTTONS ═══ */
+.btn{
+  padding:7px 16px;border-radius:50px;
+  font-family:var(--font);font-size:var(--xs);font-weight:700;
+  cursor:pointer;border:none;transition:all .2s;
+  display:inline-flex;align-items:center;gap:5px;
+}
+.btn-primary{background:var(--teal);color:#060A12}
+.btn-primary:hover{opacity:.88;transform:translateY(-1px)}
+.btn-ghost{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  color:var(--text2);
+}
+.btn-ghost:hover{border-color:var(--teal);color:var(--text)}
+.btn-danger{background:var(--red-dim);border:1px solid rgba(239,68,68,.2);color:var(--red)}
+.btn-danger:hover{background:rgba(239,68,68,.15)}
+
+/* ═══ AVATAR ═══ */
+.av{
+  width:28px;height:28px;
+  border-radius:7px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:.7rem;font-weight:700;color:#060A12;flex-shrink:0;
+}
+
+/* ═══ SEARCH INPUT ═══ */
+.search{
+  background:var(--surface2);
+  border:1.5px solid var(--border);
+  border-radius:20px;
+  color:var(--text);
+  font-family:var(--font);font-size:var(--xs);
+  padding:6px 14px;outline:none;
+  transition:border-color .2s;width:170px;
+}
+.search:focus{border-color:var(--teal)}
+
+/* ═══ MODALS ═══ */
+.overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.7);
+  z-index:200;
+  display:none;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);
+  padding:16px;
+}
+.overlay.open{display:flex}
+.modal{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-xl);
+  padding:24px;
+  width:100%;max-width:470px;
+  max-height:90vh;overflow-y:auto;
+}
+.modal-head{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:18px;
+}
+.modal-title{font-size:var(--xl);font-weight:800}
+.modal-close{
+  background:none;border:none;cursor:pointer;
+  color:var(--text2);font-size:1.1rem;padding:0;
+  transition:color .2s;
+}
+.modal-close:hover{color:var(--text)}
+.mfield{margin-bottom:12px}
+.mlabel{
+  display:block;font-size:var(--xs);font-weight:600;
+  color:var(--text2);margin-bottom:5px;
+}
+.minput{
+  width:100%;
+  background:var(--surface2);
+  border:1.5px solid var(--border);
+  border-radius:var(--r);
+  color:var(--text);
+  font-family:var(--font);font-size:var(--xs);
+  padding:9px 12px;outline:none;
+  transition:border-color .2s;-webkit-appearance:none;
+}
+.minput:focus{border-color:var(--teal)}
+.mrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-footer{
+  display:flex;gap:8px;justify-content:flex-end;
+  margin-top:18px;padding-top:14px;
+  border-top:1px solid var(--border);
+}
+
+/* ═══ GRID LAYOUTS ═══ */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+/* ═══ STAT ROWS ═══ */
+.stat{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:7px 0;border-bottom:1px solid var(--border2);
+  font-size:var(--xs);
+}
+.stat:last-child{border-bottom:none}
+.stat-k{color:var(--text2)}
+.stat-v{font-weight:700}
+
+/* ═══ LOADING ═══ */
+.loading{
+  display:flex;align-items:center;justify-content:center;
+  gap:8px;padding:36px;
+  color:var(--text2);font-size:var(--sm);
+}
+.spinner{
+  width:18px;height:18px;flex-shrink:0;
+  border:2px solid var(--border);
+  border-top-color:var(--teal);
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ═══ EMPTY STATE ═══ */
+.empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:48px 20px;gap:10px;
+  color:var(--text2);text-align:center;
+}
+.empty-icon{font-size:2.5rem;opacity:.4}
+.empty-text{font-size:var(--sm);font-weight:600}
+.empty-sub{font-size:var(--xs);color:var(--text3)}
+
+/* ═══ SCHEDULE ROW ═══ */
+.sched-row{
+  display:flex;align-items:center;gap:11px;
+  padding:9px 15px;
+  border-bottom:1px solid var(--border2);
+  transition:background .15s;cursor:pointer;
+}
+.sched-row:hover{background:rgba(255,255,255,.02)}
+.sched-row:last-child{border-bottom:none}
+.sched-time{
+  font-family:var(--mono);font-size:var(--xs);
+  font-weight:700;color:var(--teal);min-width:52px;
+}
+.sched-info{flex:1}
+.sched-name{font-size:var(--xs);font-weight:700;margin-bottom:1px}
+.sched-sub{font-size:.6rem;color:var(--text2)}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:900px){
+  .kpi-row{grid-template-columns:1fr 1fr}
+}
+@media(max-width:700px){
+  :root{--sb-w:52px}
+  .sidebar{width:52px;min-width:52px}
+  .sidebar .sb-brand-name,.sidebar .sb-info,
+  .sidebar .sb-group,.sidebar .sb-item-label,
+  .sidebar .sb-badge{display:none}
+  .sidebar .sb-item{justify-content:center;padding:10px}
+  .sidebar .sb-brand{justify-content:center}
+  .sidebar .sb-toggle{display:none}
+  .sidebar .sb-user{justify-content:center}
+  .sidebar .btn-logout span{display:none}
+  .g2,.g3{grid-template-columns:1fr}
+  .kpi-row{grid-template-columns:1fr 1fr}
+  .page-body{padding:12px}
+}
+
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.page.on .page-body > *{animation:fadeUp .25s ease}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(1.6)}}
 </style>
 </head>
 <body>
 
-<!-- SETUP SCREEN — يظهر عند أول تشغيل إذا لم يوجد API Key -->
-<div class="screen" id="screen-setup">
-  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(212,168,67,.06),transparent 65%);pointer-events:none"></div>
-  <div class="setup-card" style="position:relative;z-index:1">
-    <div class="logo-wrap" style="margin-bottom:14px">
-      <div class="logo-dot"></div>
-      <div class="logo-text">AYAN <span class="logo-badge">AI</span></div>
-    </div>
-    <div class="setup-title">⚙️ إعداد الاتصال بـ Supabase</div>
-    <div class="setup-sub">لتشغيل المنصة، تحتاج مفتاح API من مشروعك على Supabase.</div>
-    <div class="setup-steps">
-      <b>1.</b> اذهب لـ <b>supabase.com</b> → مشروعك<br>
-      <b>2.</b> اضغط <b>Settings</b> → <b>API</b><br>
-      <b>3.</b> انسخ <b>anon public</b> key (يبدأ بـ eyJhbGci...)<br>
-      <b>4.</b> الصقه أدناه واضغط حفظ
-    </div>
-    <div class="mf">
-      <label class="ml">🔑 Supabase Anon Key</label>
-      <textarea class="mi" id="setup-key" rows="3" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." style="direction:ltr;font-size:.65rem;resize:none"></textarea>
-    </div>
-    <button class="btn bp" style="width:100%;justify-content:center;padding:12px" onclick="saveSetup()">✅ حفظ والمتابعة</button>
-    <div style="margin-top:12px;font-size:var(--xs);color:var(--muted2);text-align:center">Project: mahcdmonvolsgbelosya</div>
-  </div>
-</div>
-
-<!-- LOGIN -->
-<div class="screen" id="screen-login">
+<!-- ════ LOGIN ════ -->
+<div class="screen active" id="screen-login">
   <div class="login-bg"></div>
   <div class="login-card">
-    <div class="logo-wrap">
-      <div class="logo-dot"></div>
-      <div class="logo-text">AYAN <span class="logo-badge">AI</span></div>
-    </div>
-    <div class="conn-bar">
-      <div class="cdot" id="cdot" style="background:var(--gold);animation:pulse 2s infinite"></div>
-      <span id="ctxt" style="flex:1">جاري الاتصال...</span>
-      <button onclick="document.getElementById('screen-setup').classList.add('active');document.getElementById('screen-login').classList.remove('active')" style="background:none;border:none;cursor:pointer;color:var(--muted2);font-size:.65rem">⚙️ تغيير المفتاح</button>
-    </div>
-    <div class="login-title">مرحباً بك 👋</div>
-    <div class="login-sub">سجّل دخولك باستخدام حساب جوجل</div>
 
-    <!-- Google OAuth Button -->
-    <button id="lbtn" onclick="doGoogleLogin()" style="width:100%;padding:13px;border-radius:50px;background:#fff;color:#1f1f1f;font-family:Cairo,sans-serif;font-size:var(--base);font-weight:700;border:none;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.15)">
-      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+    <div class="brand">
+      <div class="brand-icon">🏥</div>
+      <span class="brand-name">AYAN</span>
+      <span class="brand-tag">AI</span>
+    </div>
+
+    <div class="conn-pill">
+      <div class="conn-dot" id="conn-dot" style="background:var(--amber);animation:pulse 2s infinite"></div>
+      <span id="conn-text" style="flex:1">جاري الاتصال بـ Supabase...</span>
+      <button onclick="showKeySetup()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:.65rem;font-family:var(--font)">⚙️ إعدادات</button>
+    </div>
+
+    <h1 class="login-title">مرحباً بك 👋</h1>
+    <p class="login-sub">منصة إدارة العيادات الطبية الذكية</p>
+
+    <button class="btn-google" id="btn-google" onclick="loginGoogle()">
+      <svg width="20" height="20" viewBox="0 0 48 48">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+      </svg>
       تسجيل الدخول بـ Google
     </button>
 
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;color:var(--muted);font-size:var(--xs)">
-      <div style="flex:1;height:1px;background:var(--border)"></div>أو<div style="flex:1;height:1px;background:var(--border)"></div>
-    </div>
+    <div class="divider">أو بكلمة مرور</div>
 
-    <!-- Email/Password fallback -->
     <div class="field">
-      <label class="fl">البريد الإلكتروني</label>
-      <input class="fi" id="ein" placeholder="email@example.com" style="direction:ltr">
+      <label class="label">البريد الإلكتروني</label>
+      <input class="input" id="inp-email" placeholder="email@example.com" style="direction:ltr">
     </div>
     <div class="field">
-      <label class="fl">كلمة المرور</label>
-      <input class="fi" id="pin" type="password" placeholder="كلمة المرور">
+      <label class="label">كلمة المرور</label>
+      <input class="input" id="inp-pass" type="password" placeholder="••••••••">
     </div>
-    <button onclick="doLogin()" style="width:100%;padding:11px;border-radius:50px;background:var(--s2);border:1px solid var(--border);color:var(--muted2);font-family:Cairo,sans-serif;font-size:var(--sm);font-weight:700;cursor:pointer;margin-top:4px">🔐 دخول بكلمة المرور</button>
+    <button class="btn-email" onclick="loginEmail()">🔐 تسجيل الدخول</button>
 
-    <div style="text-align:center;font-size:var(--xs);color:var(--muted2);margin-top:12px">متصل بـ Supabase — mahcdmonvolsgbelosya</div>
+    <p class="login-note">Supabase · mahcdmonvolsgbelosya</p>
   </div>
 </div>
 
-<!-- APP -->
+<!-- ════ APP ════ -->
 <div class="screen" id="screen-app">
-  <aside class="sidebar" id="sb">
-    <div class="sb-hdr">
-      <div class="sb-logo"><div class="logo-dot"></div><span>AYAN AI</span></div>
-      <button class="sb-tog" onclick="document.getElementById('sb').classList.toggle('collapsed')">☰</button>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-brand">
+      <div class="sb-brand-ico">🏥</div>
+      <span class="sb-brand-name">AYAN AI</span>
+      <button class="sb-toggle" onclick="toggleSidebar()">☰</button>
     </div>
+
     <div class="sb-user">
-      <div class="sb-av" id="sbav" style="background:var(--teal)">م</div>
-      <div>
-        <div class="sb-name" id="sbname">...</div>
-        <div class="sb-role" id="sbrole">...</div>
+      <div class="sb-av" id="sb-av" style="background:var(--teal)">م</div>
+      <div class="sb-info">
+        <div class="sb-name" id="sb-name">...</div>
+        <div class="sb-role" id="sb-role">...</div>
       </div>
     </div>
+
     <nav class="sb-nav">
-      <div class="sb-sec">الرئيسي</div>
-      <div class="ni on" onclick="gp('dash',this)"><div class="nii">📊</div><div class="nil">لوحة التحكم</div></div>
-      <div class="ni" onclick="gp('pts',this)"><div class="nii">🧑‍⚕️</div><div class="nil">المرضى</div><div class="nib" id="nbp">0</div></div>
-      <div class="ni" onclick="gp('appts',this)"><div class="nii">📅</div><div class="nil">المواعيد</div><div class="nib" id="nba">0</div></div>
-      <div class="sb-sec">الإدارة</div>
-      <div class="ni" onclick="gp('docs',this)"><div class="nii">🩺</div><div class="nil">الأطباء</div></div>
-      <div class="ni" onclick="gp('inv',this)"><div class="nii">💳</div><div class="nil">الفواتير</div></div>
-      <div class="ni" onclick="gp('specs',this)"><div class="nii">🎯</div><div class="nil">التخصصات</div></div>
-      <div class="sb-sec">النظام</div>
-      <div class="ni" onclick="gp('sett',this)"><div class="nii">⚙️</div><div class="nil">الإعدادات</div></div>
+      <div class="sb-group">الرئيسي</div>
+      <div class="sb-item on" onclick="goto('dash',this)">
+        <div class="sb-item-icon">📊</div>
+        <span class="sb-item-label">لوحة التحكم</span>
+      </div>
+      <div class="sb-item" onclick="goto('patients',this)">
+        <div class="sb-item-icon">🧑‍⚕️</div>
+        <span class="sb-item-label">المرضى</span>
+        <span class="sb-badge" id="badge-pts">0</span>
+      </div>
+      <div class="sb-item" onclick="goto('appts',this)">
+        <div class="sb-item-icon">📅</div>
+        <span class="sb-item-label">المواعيد</span>
+        <span class="sb-badge" id="badge-appts">0</span>
+      </div>
+
+      <div class="sb-group">الإدارة</div>
+      <div class="sb-item" onclick="goto('doctors',this)">
+        <div class="sb-item-icon">🩺</div>
+        <span class="sb-item-label">الأطباء</span>
+      </div>
+      <div class="sb-item" onclick="goto('invoices',this)">
+        <div class="sb-item-icon">💳</div>
+        <span class="sb-item-label">الفواتير</span>
+      </div>
+      <div class="sb-item" onclick="goto('specs',this)">
+        <div class="sb-item-icon">🎯</div>
+        <span class="sb-item-label">التخصصات</span>
+      </div>
+
+      <div class="sb-group">النظام</div>
+      <div class="sb-item" onclick="goto('settings',this)">
+        <div class="sb-item-icon">⚙️</div>
+        <span class="sb-item-label">الإعدادات</span>
+      </div>
     </nav>
-    <div class="sb-ft">
-      <button class="lout" onclick="doLogout()">🚪 <span>خروج</span></button>
+
+    <div class="sb-footer">
+      <button class="btn-logout" onclick="logout()">
+        🚪 <span>تسجيل الخروج</span>
+      </button>
     </div>
   </aside>
 
+  <!-- MAIN -->
   <div class="main">
 
-    <!-- DASHBOARD -->
+    <!-- ── DASHBOARD ── -->
     <div class="page on" id="page-dash">
-      <div class="phdr">
-        <div><div class="pht">📊 لوحة التحكم</div><div class="phs" id="cname">...</div></div>
-        <div class="pha">
-          <button class="btn bk" onclick="loadDash()">🔄 تحديث</button>
-          <button class="btn bp" onclick="om('mp')">+ مريض جديد</button>
+      <div class="page-head">
+        <div>
+          <div class="page-title">📊 لوحة التحكم</div>
+          <div class="page-sub" id="center-name">جاري التحميل...</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-ghost" onclick="loadDash()">🔄 تحديث</button>
+          <button class="btn btn-primary" onclick="openModal('modal-patient')">+ مريض جديد</button>
         </div>
       </div>
-      <div class="pi">
-        <div class="kgrid">
-          <div class="kc ct"><div class="ki it">🧑‍⚕️</div><div class="kv" id="kp" style="color:var(--teal)">—</div><div class="kl">إجمالي المرضى</div></div>
-          <div class="kc ca"><div class="ki ia">📅</div><div class="kv" id="ka" style="color:var(--accent)">—</div><div class="kl">مواعيد اليوم</div></div>
-          <div class="kc cg"><div class="ki ig">💰</div><div class="kv" id="kr" style="color:var(--green)">—</div><div class="kl">إيراد الشهر</div></div>
-          <div class="kc co"><div class="ki io">📋</div><div class="kv" id="ki2" style="color:var(--gold)">—</div><div class="kl">فواتير معلقة</div></div>
+      <div class="page-body">
+        <div class="kpi-row">
+          <div class="kpi kpi-t"><div class="kpi-icon">🧑‍⚕️</div><div class="kpi-val" id="kpi-pts">—</div><div class="kpi-label">إجمالي المرضى</div></div>
+          <div class="kpi kpi-b"><div class="kpi-icon">📅</div><div class="kpi-val" id="kpi-appts">—</div><div class="kpi-label">مواعيد اليوم</div></div>
+          <div class="kpi kpi-g"><div class="kpi-icon">💰</div><div class="kpi-val" id="kpi-rev">—</div><div class="kpi-label">إيراد الشهر (ر.س)</div></div>
+          <div class="kpi kpi-a"><div class="kpi-icon">📋</div><div class="kpi-val" id="kpi-inv">—</div><div class="kpi-label">فواتير معلقة</div></div>
         </div>
         <div class="g2">
-          <div class="pnl">
-            <div class="ph2"><div class="pt2">📅 مواعيد اليوم</div><button class="pa2" onclick="gp('appts',null)">عرض الكل</button></div>
-            <div id="dappts"><div class="ld"><div class="spin"></div>جاري التحميل</div></div>
+          <div class="panel">
+            <div class="panel-head">
+              <span class="panel-title">📅 مواعيد اليوم</span>
+              <button class="panel-action" onclick="goto('appts',null)">عرض الكل</button>
+            </div>
+            <div id="dash-appts"><div class="loading"><div class="spinner"></div>جاري التحميل</div></div>
           </div>
-          <div class="pnl">
-            <div class="ph2"><div class="pt2">👥 آخر المرضى</div><button class="pa2" onclick="gp('pts',null)">عرض الكل</button></div>
-            <div id="dpts"><div class="ld"><div class="spin"></div>جاري التحميل</div></div>
+          <div class="panel">
+            <div class="panel-head">
+              <span class="panel-title">👥 آخر المرضى</span>
+              <button class="panel-action" onclick="goto('patients',null)">عرض الكل</button>
+            </div>
+            <div id="dash-pts"><div class="loading"><div class="spinner"></div>جاري التحميل</div></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- PATIENTS -->
-    <div class="page" id="page-pts">
-      <div class="phdr">
-        <div><div class="pht">🧑‍⚕️ المرضى</div><div class="phs" id="ptsc">...</div></div>
-        <div class="pha">
-          <input class="fi" style="border-radius:20px;padding:6px 14px;width:160px" placeholder="🔍 بحث..." oninput="srchPts(this.value)">
-          <button class="btn bp" onclick="om('mp')">+ مريض جديد</button>
+    <!-- ── PATIENTS ── -->
+    <div class="page" id="page-patients">
+      <div class="page-head">
+        <div>
+          <div class="page-title">🧑‍⚕️ المرضى</div>
+          <div class="page-sub" id="pts-count">...</div>
+        </div>
+        <div class="page-actions">
+          <input class="search" placeholder="🔍 بحث بالاسم أو الجوال..." oninput="searchPts(this.value)">
+          <button class="btn btn-primary" onclick="openModal('modal-patient')">+ مريض جديد</button>
         </div>
       </div>
-      <div class="pi">
-        <div class="pnl"><div class="tw"><table class="tbl">
-          <thead><tr><th>المريض</th><th>الجوال</th><th>العمر</th><th>الكود</th><th>إجراءات</th></tr></thead>
-          <tbody id="ptb"><tr><td colspan="5"><div class="ld"><div class="spin"></div></div></td></tr></tbody>
-        </table></div></div>
+      <div class="page-body">
+        <div class="panel">
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th>المريض</th><th>الجوال</th><th>العمر</th><th>فصيلة الدم</th><th>الكود</th><th>إجراءات</th></tr></thead>
+              <tbody id="pts-body"><tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- APPOINTMENTS -->
+    <!-- ── APPOINTMENTS ── -->
     <div class="page" id="page-appts">
-      <div class="phdr">
-        <div><div class="pht">📅 المواعيد</div><div class="phs">جميع مواعيد المركز</div></div>
-        <div class="pha"><button class="btn bp" onclick="om('ma')">+ موعد جديد</button></div>
+      <div class="page-head">
+        <div>
+          <div class="page-title">📅 المواعيد</div>
+          <div class="page-sub">جميع مواعيد المركز</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary" onclick="openModal('modal-appt')">+ موعد جديد</button>
+        </div>
       </div>
-      <div class="pi">
-        <div class="pnl"><div class="tw"><table class="tbl">
-          <thead><tr><th>التاريخ والوقت</th><th>المريض</th><th>الخدمة</th><th>الحالة</th><th>إجراء</th></tr></thead>
-          <tbody id="atb"><tr><td colspan="5"><div class="ld"><div class="spin"></div></div></td></tr></tbody>
-        </table></div></div>
-      </div>
-    </div>
-
-    <!-- DOCTORS -->
-    <div class="page" id="page-docs">
-      <div class="phdr">
-        <div><div class="pht">🩺 الأطباء</div><div class="phs">فريق المركز الطبي</div></div>
-        <div class="pha"><button class="btn bp" onclick="om('md')">+ طبيب جديد</button></div>
-      </div>
-      <div class="pi"><div class="g3" id="dgrid"><div class="ld"><div class="spin"></div></div></div></div>
-    </div>
-
-    <!-- INVOICES -->
-    <div class="page" id="page-inv">
-      <div class="phdr">
-        <div><div class="pht">💳 الفواتير</div><div class="phs">إدارة الفواتير والمدفوعات</div></div>
-        <div class="pha"><button class="btn bp" onclick="om('mi')">+ فاتورة جديدة</button></div>
-      </div>
-      <div class="pi">
-        <div class="pnl"><div class="tw"><table class="tbl">
-          <thead><tr><th>رقم الفاتورة</th><th>المريض</th><th>المبلغ</th><th>طريقة الدفع</th><th>التاريخ</th><th>الحالة</th></tr></thead>
-          <tbody id="itb"><tr><td colspan="6"><div class="ld"><div class="spin"></div></div></td></tr></tbody>
-        </table></div></div>
+      <div class="page-body">
+        <div class="panel">
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th>التاريخ والوقت</th><th>المريض</th><th>الجوال</th><th>الخدمة</th><th>الحالة</th><th>إجراء</th></tr></thead>
+              <tbody id="appts-body"><tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- SPECIALTIES -->
+    <!-- ── DOCTORS ── -->
+    <div class="page" id="page-doctors">
+      <div class="page-head">
+        <div>
+          <div class="page-title">🩺 الأطباء</div>
+          <div class="page-sub">فريق المركز الطبي</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary" onclick="openModal('modal-doctor')">+ طبيب جديد</button>
+        </div>
+      </div>
+      <div class="page-body">
+        <div class="g3" id="doctors-grid">
+          <div class="loading"><div class="spinner"></div>جاري التحميل</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── INVOICES ── -->
+    <div class="page" id="page-invoices">
+      <div class="page-head">
+        <div>
+          <div class="page-title">💳 الفواتير</div>
+          <div class="page-sub">إدارة الفواتير والمدفوعات</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary" onclick="openModal('modal-invoice')">+ فاتورة جديدة</button>
+        </div>
+      </div>
+      <div class="page-body">
+        <div class="panel">
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th>رقم الفاتورة</th><th>المريض</th><th>المبلغ</th><th>طريقة الدفع</th><th>التاريخ</th><th>الحالة</th></tr></thead>
+              <tbody id="inv-body"><tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SPECIALTIES ── -->
     <div class="page" id="page-specs">
-      <div class="phdr">
-        <div><div class="pht">🎯 التخصصات</div><div class="phs">تخصصات وخدمات المركز</div></div>
-        <div class="pha"><button class="btn bp" onclick="om('ms')">+ تخصص جديد</button></div>
+      <div class="page-head">
+        <div>
+          <div class="page-title">🎯 التخصصات</div>
+          <div class="page-sub">تخصصات وخدمات المركز</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary" onclick="openModal('modal-spec')">+ تخصص جديد</button>
+        </div>
       </div>
-      <div class="pi"><div class="g3" id="sgrid"><div class="ld"><div class="spin"></div></div></div></div>
+      <div class="page-body">
+        <div class="g3" id="specs-grid">
+          <div class="loading"><div class="spinner"></div>جاري التحميل</div>
+        </div>
+      </div>
     </div>
 
-    <!-- SETTINGS -->
-    <div class="page" id="page-sett">
-      <div class="phdr">
-        <div><div class="pht">⚙️ الإعدادات</div><div class="phs">إعدادات مركزك الطبي</div></div>
-        <div class="pha"><button class="btn bp" onclick="saveSett()">💾 حفظ</button></div>
+    <!-- ── SETTINGS ── -->
+    <div class="page" id="page-settings">
+      <div class="page-head">
+        <div>
+          <div class="page-title">⚙️ الإعدادات</div>
+          <div class="page-sub">إعدادات مركزك الطبي</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary" onclick="saveCenterSettings()">💾 حفظ التغييرات</button>
+        </div>
       </div>
-      <div class="pi">
+      <div class="page-body">
         <div class="g2">
-          <div class="pnl">
-            <div class="ph2"><div class="pt2">🏥 معلومات المركز</div></div>
-            <div class="pb">
-              <div class="mf"><label class="ml">اسم المركز</label><input class="mi" id="sn"></div>
-              <div class="mf"><label class="ml">رقم الجوال</label><input class="mi" id="sp" style="direction:ltr"></div>
-              <div class="mf"><label class="ml">البريد الإلكتروني</label><input class="mi" id="se" style="direction:ltr"></div>
-              <div class="mf"><label class="ml">المدينة</label><input class="mi" id="sc"></div>
+          <div class="panel">
+            <div class="panel-head"><span class="panel-title">🏥 معلومات المركز</span></div>
+            <div class="panel-body">
+              <div class="mfield"><label class="mlabel">اسم المركز</label><input class="minput" id="set-name"></div>
+              <div class="mfield"><label class="mlabel">رقم الجوال</label><input class="minput" id="set-phone" style="direction:ltr"></div>
+              <div class="mfield"><label class="mlabel">البريد الإلكتروني</label><input class="minput" id="set-email" style="direction:ltr"></div>
+              <div class="mfield"><label class="mlabel">المدينة</label><input class="minput" id="set-city"></div>
             </div>
           </div>
-          <div class="pnl">
-            <div class="ph2"><div class="pt2">🔗 حالة الاتصال</div></div>
-            <div class="pb">
-              <div class="sr"><span class="sk">Supabase</span><span class="sv" style="color:var(--green)">✅ متصل</span></div>
-              <div class="sr"><span class="sk">Project ID</span><span class="sv" style="font-size:.62rem;direction:ltr">mahcdmonvolsgbelosya</span></div>
-              <div class="sr"><span class="sk">المستخدم</span><span class="sv" id="su">...</span></div>
-              <div class="sr"><span class="sk">الدور</span><span class="sv" id="sr2">...</span></div>
-              <div class="sr"><span class="sk">Tenant ID</span><span class="sv" id="st" style="font-size:.62rem;direction:ltr">...</span></div>
-              <button class="btn bk" style="margin-top:10px;width:100%;justify-content:center" onclick="document.getElementById('screen-setup').classList.add('active')">🔑 تغيير API Key</button>
+          <div class="panel">
+            <div class="panel-head"><span class="panel-title">🔗 حالة الاتصال</span></div>
+            <div class="panel-body">
+              <div class="stat"><span class="stat-k">Supabase</span><span class="stat-v" style="color:var(--green)">✅ متصل</span></div>
+              <div class="stat"><span class="stat-k">Project</span><span class="stat-v" style="font-size:.62rem;direction:ltr">mahcdmonvolsgbelosya</span></div>
+              <div class="stat"><span class="stat-k">المستخدم</span><span class="stat-v" id="set-user">...</span></div>
+              <div class="stat"><span class="stat-k">الدور</span><span class="stat-v" id="set-role">...</span></div>
+              <div class="stat"><span class="stat-k">Tenant ID</span><span class="stat-v" id="set-tenant" style="font-size:.62rem;direction:ltr">...</span></div>
+              <button class="btn btn-ghost" style="margin-top:12px;width:100%;justify-content:center" onclick="showKeySetup()">🔑 تغيير API Key</button>
             </div>
           </div>
         </div>
       </div>
     </div>
 
+  </div><!-- /main -->
+</div><!-- /screen-app -->
+
+<!-- ════ MODALS ════ -->
+
+<!-- Patient Modal -->
+<div class="overlay" id="modal-patient">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">🧑‍⚕️ مريض جديد</div>
+      <button class="modal-close" onclick="closeModal('modal-patient')">✕</button>
+    </div>
+    <div class="mfield"><label class="mlabel">الاسم الكامل *</label><input class="minput" id="p-name" placeholder="محمد عبدالله"></div>
+    <div class="mrow">
+      <div class="mfield"><label class="mlabel">رقم الجوال *</label><input class="minput" id="p-phone" placeholder="+966..." style="direction:ltr"></div>
+      <div class="mfield"><label class="mlabel">تاريخ الميلاد</label><input class="minput" id="p-dob" type="date"></div>
+    </div>
+    <div class="mrow">
+      <div class="mfield"><label class="mlabel">الجنس</label>
+        <select class="minput" id="p-gender"><option value="male">ذكر</option><option value="female">أنثى</option></select>
+      </div>
+      <div class="mfield"><label class="mlabel">فصيلة الدم</label>
+        <select class="minput" id="p-blood"><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>O+</option><option>O-</option><option>AB+</option><option>AB-</option></select>
+      </div>
+    </div>
+    <div class="mfield"><label class="mlabel">ملاحظات</label><textarea class="minput" id="p-notes" rows="2" placeholder="أي معلومات إضافية..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-patient')">إلغاء</button>
+      <button class="btn btn-primary" onclick="savePatient()">✅ حفظ المريض</button>
+    </div>
   </div>
 </div>
 
-<!-- MODALS -->
-<div class="mov" id="mp">
+<!-- Appointment Modal -->
+<div class="overlay" id="modal-appt">
   <div class="modal">
-    <div class="mhdr"><div class="mtit">🧑‍⚕️ مريض جديد</div><button class="mx" onclick="cm('mp')">✕</button></div>
-    <div class="mf"><label class="ml">الاسم الكامل *</label><input class="mi" id="pn" placeholder="محمد عبدالله"></div>
-    <div class="mr">
-      <div class="mf"><label class="ml">رقم الجوال *</label><input class="mi" id="pp" placeholder="+966..." style="direction:ltr"></div>
-      <div class="mf"><label class="ml">تاريخ الميلاد</label><input class="mi" id="pd" type="date"></div>
+    <div class="modal-head">
+      <div class="modal-title">📅 موعد جديد</div>
+      <button class="modal-close" onclick="closeModal('modal-appt')">✕</button>
     </div>
-    <div class="mr">
-      <div class="mf"><label class="ml">الجنس</label><select class="mi" id="pg"><option value="male">ذكر</option><option value="female">أنثى</option></select></div>
-      <div class="mf"><label class="ml">فصيلة الدم</label><select class="mi" id="pb"><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>O+</option><option>O-</option><option>AB+</option><option>AB-</option></select></div>
+    <div class="mfield"><label class="mlabel">رقم جوال المريض *</label><input class="minput" id="a-phone" placeholder="+966..." style="direction:ltr"></div>
+    <div class="mrow">
+      <div class="mfield"><label class="mlabel">التاريخ *</label><input class="minput" id="a-date" type="date"></div>
+      <div class="mfield"><label class="mlabel">الوقت *</label><input class="minput" id="a-time" type="time" value="09:00"></div>
     </div>
-    <div class="mf"><label class="ml">ملاحظات</label><textarea class="mi" id="pnt" rows="2" placeholder="..."></textarea></div>
-    <div class="mft"><button class="btn bk" onclick="cm('mp')">إلغاء</button><button class="btn bp" onclick="savePt()">✅ حفظ في قاعدة البيانات</button></div>
+    <div class="mfield"><label class="mlabel">ملاحظات</label><textarea class="minput" id="a-notes" rows="2" placeholder="وصف الخدمة أو ملاحظات..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-appt')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveAppt()">📅 حجز الموعد</button>
+    </div>
   </div>
 </div>
 
-<div class="mov" id="ma">
+<!-- Doctor Modal -->
+<div class="overlay" id="modal-doctor">
   <div class="modal">
-    <div class="mhdr"><div class="mtit">📅 موعد جديد</div><button class="mx" onclick="cm('ma')">✕</button></div>
-    <div class="mf"><label class="ml">رقم جوال المريض *</label><input class="mi" id="aph" placeholder="+966..." style="direction:ltr"></div>
-    <div class="mr">
-      <div class="mf"><label class="ml">التاريخ *</label><input class="mi" id="adt" type="date"></div>
-      <div class="mf"><label class="ml">الوقت *</label><input class="mi" id="atm" type="time" value="09:00"></div>
+    <div class="modal-head">
+      <div class="modal-title">🩺 طبيب جديد</div>
+      <button class="modal-close" onclick="closeModal('modal-doctor')">✕</button>
     </div>
-    <div class="mf"><label class="ml">ملاحظات</label><textarea class="mi" id="ant" rows="2"></textarea></div>
-    <div class="mft"><button class="btn bk" onclick="cm('ma')">إلغاء</button><button class="btn bp" onclick="saveAppt()">📅 حجز الموعد</button></div>
+    <div class="mfield"><label class="mlabel">الاسم الكامل *</label><input class="minput" id="d-name" placeholder="د. محمد الأحمد"></div>
+    <div class="mrow">
+      <div class="mfield"><label class="mlabel">البريد الإلكتروني *</label><input class="minput" id="d-email" placeholder="doctor@clinic.com" style="direction:ltr"></div>
+      <div class="mfield"><label class="mlabel">رقم الجوال</label><input class="minput" id="d-phone" placeholder="+966..."></div>
+    </div>
+    <div class="mfield"><label class="mlabel">كلمة المرور *</label><input class="minput" id="d-pass" type="password"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-doctor')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveDoctor()">إضافة الطبيب</button>
+    </div>
   </div>
 </div>
 
-<div class="mov" id="ms">
+<!-- Invoice Modal -->
+<div class="overlay" id="modal-invoice">
   <div class="modal">
-    <div class="mhdr"><div class="mtit">🎯 تخصص جديد</div><button class="mx" onclick="cm('ms')">✕</button></div>
-    <div class="mf"><label class="ml">اسم التخصص *</label><input class="mi" id="spn" placeholder="مثال: تجميل الأسنان"></div>
-    <div class="mr">
-      <div class="mf"><label class="ml">الأيقونة</label><input class="mi" id="spi" value="🏥"></div>
-      <div class="mf"><label class="ml">مدة الجلسة (دقيقة)</label><input class="mi" id="spd" type="number" value="30"></div>
+    <div class="modal-head">
+      <div class="modal-title">💳 فاتورة جديدة</div>
+      <button class="modal-close" onclick="closeModal('modal-invoice')">✕</button>
     </div>
-    <div class="mft"><button class="btn bk" onclick="cm('ms')">إلغاء</button><button class="btn bp" onclick="saveSpec()">إضافة</button></div>
+    <div class="mfield"><label class="mlabel">رقم جوال المريض</label><input class="minput" id="i-phone" placeholder="+966..." style="direction:ltr"></div>
+    <div class="mfield"><label class="mlabel">الخدمة</label><input class="minput" id="i-service" placeholder="وصف الخدمة الطبية"></div>
+    <div class="mrow">
+      <div class="mfield"><label class="mlabel">المبلغ (ر.س) *</label><input class="minput" id="i-amount" type="number" placeholder="0"></div>
+      <div class="mfield"><label class="mlabel">طريقة الدفع</label>
+        <select class="minput" id="i-method">
+          <option value="cash">كاش</option>
+          <option value="card">بطاقة</option>
+          <option value="mada">مدى</option>
+          <option value="insurance">تأمين</option>
+          <option value="bank_transfer">تحويل بنكي</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-invoice')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveInvoice()">إصدار الفاتورة</button>
+    </div>
   </div>
 </div>
 
-<div class="mov" id="md">
+<!-- Specialty Modal -->
+<div class="overlay" id="modal-spec">
   <div class="modal">
-    <div class="mhdr"><div class="mtit">🩺 طبيب جديد</div><button class="mx" onclick="cm('md')">✕</button></div>
-    <div class="mf"><label class="ml">الاسم الكامل *</label><input class="mi" id="dn" placeholder="د. محمد الأحمد"></div>
-    <div class="mr">
-      <div class="mf"><label class="ml">البريد الإلكتروني *</label><input class="mi" id="de" placeholder="doctor@clinic.com" style="direction:ltr"></div>
-      <div class="mf"><label class="ml">رقم الجوال</label><input class="mi" id="dph" placeholder="+966..."></div>
+    <div class="modal-head">
+      <div class="modal-title">🎯 تخصص جديد</div>
+      <button class="modal-close" onclick="closeModal('modal-spec')">✕</button>
     </div>
-    <div class="mf"><label class="ml">كلمة المرور *</label><input class="mi" id="dp" type="password"></div>
-    <div class="mft"><button class="btn bk" onclick="cm('md')">إلغاء</button><button class="btn bp" onclick="saveDoc()">إضافة الطبيب</button></div>
+    <div class="mfield"><label class="mlabel">اسم التخصص *</label><input class="minput" id="sp-name" placeholder="مثال: تجميل الأسنان"></div>
+    <div class="mrow">
+      <div class="mfield"><label class="mlabel">الأيقونة</label><input class="minput" id="sp-icon" value="🏥"></div>
+      <div class="mfield"><label class="mlabel">مدة الجلسة (دقيقة)</label><input class="minput" id="sp-dur" type="number" value="30"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-spec')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveSpec()">إضافة التخصص</button>
+    </div>
   </div>
 </div>
 
-<div class="mov" id="mi">
+<!-- API Key Setup Modal -->
+<div class="overlay" id="modal-key">
   <div class="modal">
-    <div class="mhdr"><div class="mtit">💳 فاتورة جديدة</div><button class="mx" onclick="cm('mi')">✕</button></div>
-    <div class="mf"><label class="ml">رقم جوال المريض</label><input class="mi" id="iph" placeholder="+966..." style="direction:ltr"></div>
-    <div class="mf"><label class="ml">الخدمة</label><input class="mi" id="isv" placeholder="وصف الخدمة الطبية"></div>
-    <div class="mr">
-      <div class="mf"><label class="ml">المبلغ (ر.س)</label><input class="mi" id="iam" type="number" placeholder="0"></div>
-      <div class="mf"><label class="ml">طريقة الدفع</label><select class="mi" id="imt"><option value="cash">كاش</option><option value="card">بطاقة</option><option value="mada">مدى</option><option value="insurance">تأمين</option></select></div>
+    <div class="modal-head">
+      <div class="modal-title">🔑 إعداد Supabase API Key</div>
+      <button class="modal-close" onclick="closeModal('modal-key')">✕</button>
     </div>
-    <div class="mft"><button class="btn bk" onclick="cm('mi')">إلغاء</button><button class="btn bp" onclick="saveInv()">إصدار الفاتورة</button></div>
+    <p style="font-size:var(--xs);color:var(--text2);margin-bottom:14px;line-height:1.7">
+      اذهب لـ <b>supabase.com</b> → مشروعك → Settings → API → انسخ <b>anon public key</b> (يبدأ بـ eyJhbGci...)
+    </p>
+    <div class="mfield">
+      <label class="mlabel">Anon Public Key</label>
+      <textarea class="minput" id="key-input" rows="4" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." style="direction:ltr;font-size:.65rem;resize:none"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-key')">إلغاء</button>
+      <button class="btn btn-primary" onclick="applyKey()">✅ حفظ والاتصال</button>
+    </div>
   </div>
 </div>
 
 <div id="toast"></div>
 
 <script>
-// ══ CONFIG ══
+// ════════════════════════════════════════
+// AYAN AI — Supabase Integration
+// Project: mahcdmonvolsgbelosya
+// ════════════════════════════════════════
+
 const SB_URL = 'https://mahcdmonvolsgbelosya.supabase.co';
-// المفتاح الجديد من Supabase
 const SB_KEY_DEFAULT = 'sb_publishable_xTI6l9i2PxWRgPCkCVr6rw_Ud-P_k8O';
-let SB_KEY = localStorage.getItem('ayan_key') || SB_KEY_DEFAULT;
+let SB_KEY = localStorage.getItem('ayan_sb_key') || SB_KEY_DEFAULT;
 let sb = null;
-let TID = null; // tenant_id
+let TENANT = null;
+const COLORS = ['#00D4AA','#3B82F6','#10B981','#F59E0B','#8B5CF6','#EF4444'];
 
-// ══ UTILS ══
-let _tt;
-function toast(m,t='inf'){const el=document.getElementById('toast');el.textContent=m;el.className='show '+t;clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),3500)}
-function om(id){document.getElementById(id).classList.add('open')}
-function cm(id){document.getElementById(id).classList.remove('open')}
-document.querySelectorAll('.mov').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
-function ld(id,msg='جاري التحميل'){document.getElementById(id).innerHTML=`<div class="ld"><div class="spin"></div>${msg}</div>`}
-function empty(id,msg){document.getElementById(id).innerHTML=`<div class="ld" style="color:var(--muted2)">${msg}</div>`}
-const COLS=['var(--teal)','var(--accent)','var(--green)','var(--gold)','var(--purple)','var(--red)'];
-
-// ══ SETUP ══
-function saveSetup(){
-  const k=document.getElementById('setup-key').value.trim();
-  if(!k||!k.startsWith('eyJ')){toast('المفتاح يجب أن يبدأ بـ eyJhbGci...','err');return;}
-  localStorage.setItem('ayan_key',k);
-  SB_KEY=k;
-  document.getElementById('screen-setup').classList.remove('active');
-  document.getElementById('screen-login').classList.add('active');
-  initSB();
-  toast('✅ تم حفظ المفتاح','ok');
-}
-
-// ══ SUPABASE INIT ══
-function initSB(){
-  if(!SB_KEY){
-    document.getElementById('screen-setup').classList.add('active');
-    return;
-  }
+// ── INIT ──
+function initSupabase(){
   try{
-    // دعم كلا صيغتي المفاتيح: sb_publishable_ و eyJ
     sb = supabase.createClient(SB_URL, SB_KEY, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true
-      },
-      global: {
-        headers: {
-          'apikey': SB_KEY,
-          'Authorization': 'Bearer ' + SB_KEY
-        }
-      }
+      auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}
     });
     checkConn();
   }catch(e){
-    toast('خطأ في إنشاء الاتصال: '+e.message,'err');
+    setConnStatus('red','❌ فشل إنشاء الاتصال');
   }
 }
 
 async function checkConn(){
+  setConnStatus('amber','جاري الاتصال...',true);
   try{
-    const {error}=await sb.from('centers').select('count').limit(1);
-    const dot=document.getElementById('cdot'),txt=document.getElementById('ctxt');
+    const {error} = await sb.from('centers').select('count').limit(1);
     if(!error){
-      dot.style.background='var(--green)';dot.style.animation='none';
-      txt.textContent='✅ متصل بقاعدة البيانات';
+      setConnStatus('green','✅ متصل بقاعدة البيانات',false);
     } else {
-      dot.style.background='var(--red)';dot.style.animation='none';
-      txt.textContent='❌ '+error.message;
-      if(error.message.includes('Invalid API key')){
-        toast('❌ مفتاح API خاطئ — اضغط ⚙️ لتغييره','err');
+      if(error.message.includes('Invalid API key') || error.message.includes('invalid')){
+        setConnStatus('red','❌ مفتاح API غير صالح');
+        toast('اضغط ⚙️ وأدخل مفتاح anon public الصحيح','err');
+      } else {
+        setConnStatus('amber','⚠️ '+error.message.substring(0,40));
       }
     }
-  }catch(e){toast('❌ فشل الاتصال: '+e.message,'err')}
-}
-
-// ══ AUTH ══
-async function doGoogleLogin(){
-  if(!sb){toast('أنشئ الاتصال أولاً','err');return;}
-  const btn=document.getElementById('lbtn');
-  btn.style.opacity='.6';btn.disabled=true;
-  btn.innerHTML='<div class="spin" style="border-top-color:#4285F4;display:inline-block"></div> جاري الاتصال بـ Google...';
-  try{
-    const {data, error}=await sb.auth.signInWithOAuth({
-      provider: 'google',
-      options:{
-        // الرابط الصحيح بعد تسجيل الدخول
-        redirectTo: 'https://mohamed6111993v-ship-it.github.io/ayan-ai/',
-        // إعدادات Google OAuth
-        queryParams:{
-          access_type: 'offline',
-          prompt: 'consent',
-          // Client ID المسجّل في Google Cloud
-          client_id: '66721884352-jis44ubslolv7lpadh1aroruatnrlbip.apps.googleusercontent.com'
-        },
-        scopes: 'email profile'
-      }
-    });
-    if(error) throw error;
-    // Google سيفتح نافذة تسجيل الدخول تلقائياً
   }catch(e){
-    toast('❌ '+e.message,'err');
-    btn.style.opacity='1';btn.disabled=false;
-    btn.innerHTML=GOOGLE_BTN_HTML;
+    setConnStatus('red','❌ لا يوجد اتصال بالإنترنت');
   }
 }
 
-// HTML زر Google ثابت
-const GOOGLE_BTN_HTML = '<svg width="20" height="20" viewBox="0 0 48 48" style="flex-shrink:0"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> تسجيل الدخول بـ Google';
+function setConnStatus(color,text,animate=false){
+  const dot=document.getElementById('conn-dot');
+  const txt=document.getElementById('conn-text');
+  const colors={green:'var(--green)',amber:'var(--amber)',red:'var(--red)'};
+  dot.style.background=colors[color]||colors.amber;
+  dot.style.animation=animate?'pulse 2s infinite':'none';
+  if(txt) txt.textContent=text;
+}
 
-async function doLogin(){
-  if(!sb){toast('أنشئ الاتصال أولاً','err');return;}
-  const email=document.getElementById('ein').value.trim();
-  const pass=document.getElementById('pin').value;
+// ── AUTH ──
+async function loginGoogle(){
+  if(!sb){toast('الاتصال غير جاهز','err');return;}
+  const btn=document.getElementById('btn-google');
+  btn.disabled=true;
+  btn.innerHTML='<div class="spinner" style="border-top-color:#4285F4"></div> جاري الاتصال بـ Google...';
+  try{
+    const {error} = await sb.auth.signInWithOAuth({
+      provider:'google',
+      options:{
+        redirectTo:'https://mohamed6111993v-ship-it.github.io/ayan-ai/',
+        queryParams:{access_type:'offline',prompt:'consent'},
+        scopes:'email profile'
+      }
+    });
+    if(error) throw error;
+  }catch(e){
+    toast('❌ '+e.message,'err');
+    btn.disabled=false;
+    btn.innerHTML=`<svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> تسجيل الدخول بـ Google`;
+  }
+}
+
+async function loginEmail(){
+  const email=document.getElementById('inp-email').value.trim();
+  const pass=document.getElementById('inp-pass').value;
   if(!email||!pass){toast('أدخل البريد وكلمة المرور','err');return;}
   try{
-    const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
-    if(error)throw error;
+    const {data,error} = await sb.auth.signInWithPassword({email,password:pass});
+    if(error) throw error;
     await afterLogin(data.user);
   }catch(e){
     toast('❌ '+e.message,'err');
@@ -564,334 +1185,406 @@ async function doLogin(){
 
 async function afterLogin(user){
   let name = user.user_metadata?.full_name || user.user_metadata?.name || user.email;
-  let role = 'مالك';
-  let tenantId = null;
-  let centerName = 'مركزك الطبي';
-
-  try {
-    // حاول user_profiles
+  let role = 'مالك'; let tenant = 'CLN-DEMO-001'; let centerName = 'مركزك الطبي';
+  try{
     const {data:prof} = await sb.from('user_profiles').select('*,centers(name)').eq('id',user.id).single();
     if(prof){
-      name = prof.name || name;
-      role = prof.role || role;
-      tenantId = prof.tenant_id;
-      centerName = prof.centers?.name || centerName;
+      name = prof.name||name; role = prof.role||role;
+      tenant = prof.tenant_id||tenant;
+      centerName = prof.centers?.name||centerName;
     } else {
-      // حاول جدول users
       const {data:u} = await sb.from('users').select('*,centers(name)').eq('email',user.email).single();
-      if(u){
-        name = u.name || name;
-        role = u.role || role;
-        tenantId = u.tenant_id;
-        centerName = u.centers?.name || centerName;
-      } else {
-        // مستخدم جديد عبر Google — أضفه تلقائياً
-        if(!tenantId){
-          tenantId = 'CLN-DEMO-001'; // المركز التجريبي
-          toast('مرحباً! تم ربط حسابك بالمركز التجريبي','inf');
-        }
-      }
+      if(u){ name=u.name||name; role=u.role||role; tenant=u.tenant_id||tenant; centerName=u.centers?.name||centerName; }
     }
-  } catch(e){ console.warn('Profile fetch:', e.message); }
+  }catch(e){ console.warn(e.message); }
 
-  TID = tenantId;
-  document.getElementById('cname').textContent = centerName;
-  document.getElementById('sbav').textContent = (name||'م')[0].toUpperCase();
-  document.getElementById('sbname').textContent = name;
-  document.getElementById('sbrole').textContent = role;
+  TENANT = tenant;
+  document.getElementById('center-name').textContent = centerName;
+  document.getElementById('sb-av').textContent = (name||'م')[0].toUpperCase();
+  document.getElementById('sb-name').textContent = name;
+  document.getElementById('sb-role').textContent = role;
   document.getElementById('screen-login').classList.remove('active');
-  document.getElementById('screen-setup').classList.remove('active');
   document.getElementById('screen-app').classList.add('active');
-  toast('مرحباً ' + name.split(' ')[0] + ' ✅','ok');
+  toast('مرحباً '+name.split(' ')[0]+' ✅','ok');
   loadDash();
 }
 
-async function doLogout(){
+async function logout(){
   await sb?.auth.signOut();
-  TID=null;
+  TENANT=null;
   document.getElementById('screen-app').classList.remove('active');
   document.getElementById('screen-login').classList.add('active');
-  document.getElementById('lbtn').textContent='🔐 تسجيل الدخول';
-  document.getElementById('lbtn').disabled=false;
   toast('تم تسجيل الخروج','inf');
 }
 
-// ══ PAGE NAV ══
-function gp(id,el){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
-  document.getElementById('page-'+id)?.classList.add('on');
-  if(el)el.classList.add('on');
-  if(id==='pts')loadPts();
-  else if(id==='appts')loadAppts();
-  else if(id==='docs')loadDocs();
-  else if(id==='inv')loadInv();
-  else if(id==='specs')loadSpecs();
-  else if(id==='sett')loadSett();
+// ── KEY SETUP ──
+function showKeySetup(){ openModal('modal-key'); }
+function applyKey(){
+  const k = document.getElementById('key-input').value.trim();
+  if(!k||!k.startsWith('eyJ')){ toast('المفتاح يجب أن يبدأ بـ eyJhbGci...','err'); return; }
+  localStorage.setItem('ayan_sb_key',k);
+  SB_KEY=k;
+  closeModal('modal-key');
+  initSupabase();
+  toast('✅ تم حفظ المفتاح','ok');
 }
 
-// ══ DASHBOARD ══
+// ── PAGE NAV ──
+function goto(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.sb-item').forEach(n=>n.classList.remove('on'));
+  document.getElementById('page-'+id)?.classList.add('on');
+  if(el) el.classList.add('on');
+  const loaders={patients:loadPatients,appts:loadAppts,doctors:loadDoctors,invoices:loadInvoices,specs:loadSpecs,settings:loadSettings};
+  if(loaders[id]) loaders[id]();
+}
+
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('slim'); }
+
+// ── MODAL ──
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.overlay').forEach(o=>{
+  o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); });
+});
+
+// ── TOAST ──
+let _tt;
+function toast(msg,type='inf'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='show '+type;
+  clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+// ── DASHBOARD ──
 async function loadDash(){
-  if(!TID)return;
+  if(!TENANT) return;
   try{
-    const [r1,r2,r3]=await Promise.all([
-      sb.from('patients').select('*',{count:'exact',head:true}).eq('tenant_id',TID),
-      sb.from('appointments').select('*',{count:'exact',head:true}).eq('tenant_id',TID).gte('scheduled_at',new Date().toISOString().split('T')[0]),
-      sb.from('invoices').select('final_amount,status').eq('tenant_id',TID)
+    const today = new Date().toISOString().split('T')[0];
+    const [r1,r2,r3] = await Promise.all([
+      sb.from('patients').select('*',{count:'exact',head:true}).eq('tenant_id',TENANT),
+      sb.from('appointments').select('*',{count:'exact',head:true}).eq('tenant_id',TENANT).gte('scheduled_at',today+'T00:00:00').lte('scheduled_at',today+'T23:59:59'),
+      sb.from('invoices').select('final_amount,status').eq('tenant_id',TENANT)
     ]);
-    document.getElementById('kp').textContent=(r1.count||0).toLocaleString('ar');
-    document.getElementById('ka').textContent=(r2.count||0).toLocaleString('ar');
-    document.getElementById('nbp').textContent=r1.count||0;
-    document.getElementById('nba').textContent=r2.count||0;
     const invs=r3.data||[];
     const rev=invs.filter(i=>i.status==='paid').reduce((s,i)=>s+Number(i.final_amount||0),0);
     const pend=invs.filter(i=>i.status==='pending').length;
-    document.getElementById('kr').textContent=rev.toLocaleString('ar');
-    document.getElementById('ki2').textContent=pend;
-    loadDAppts(); loadDPts();
-  }catch(e){toast('خطأ: '+e.message,'err')}
+    document.getElementById('kpi-pts').textContent=(r1.count||0).toLocaleString('ar');
+    document.getElementById('kpi-appts').textContent=(r2.count||0).toLocaleString('ar');
+    document.getElementById('kpi-rev').textContent=rev.toLocaleString('ar');
+    document.getElementById('kpi-inv').textContent=pend;
+    document.getElementById('badge-pts').textContent=r1.count||0;
+    document.getElementById('badge-appts').textContent=r2.count||0;
+    loadDashAppts(); loadDashPts();
+  }catch(e){ toast('خطأ في التحميل: '+e.message,'err'); }
 }
 
-async function loadDAppts(){
+async function loadDashAppts(){
   const today=new Date().toISOString().split('T')[0];
-  const {data}=await sb.from('appointments').select('scheduled_at,status,notes,patients(name)').eq('tenant_id',TID).gte('scheduled_at',today+'T00:00:00').lte('scheduled_at',today+'T23:59:59').order('scheduled_at',{ascending:true}).limit(6);
-  const el=document.getElementById('dappts');
-  if(!data?.length){el.innerHTML='<div class="ld" style="color:var(--muted2)">لا توجد مواعيد اليوم</div>';return;}
-  const sm={confirmed:'bg',done:'bb',pending:'bgo',cancelled:'br',no_show:'br'};
+  const {data}=await sb.from('appointments').select('scheduled_at,status,notes,patients(name)').eq('tenant_id',TENANT).gte('scheduled_at',today+'T00:00:00').lte('scheduled_at',today+'T23:59:59').order('scheduled_at',{ascending:true}).limit(6);
+  const el=document.getElementById('dash-appts');
+  if(!data?.length){ el.innerHTML='<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">لا توجد مواعيد اليوم</div></div>'; return; }
+  const sm={confirmed:'badge-g',done:'badge-b',pending:'badge-a',cancelled:'badge-r',no_show:'badge-r'};
   const sl={confirmed:'مؤكد',done:'انتهى',pending:'انتظار',cancelled:'ملغي',no_show:'لم يحضر'};
   el.innerHTML=data.map(a=>{
     const t=new Date(a.scheduled_at).toLocaleTimeString('ar',{hour:'2-digit',minute:'2-digit'});
-    return `<div style="display:flex;align-items:center;gap:9px;padding:8px 14px;border-bottom:1px solid var(--border2)">
-      <span style="font-size:var(--xs);font-weight:700;color:var(--teal);min-width:50px;font-family:'Space Grotesk',sans-serif">${t}</span>
-      <span style="flex:1;font-size:var(--xs);font-weight:700">${a.patients?.name||'—'}</span>
-      <span class="badge ${sm[a.status]||'bgo'}">${sl[a.status]||a.status}</span>
+    return `<div class="sched-row">
+      <span class="sched-time">${t}</span>
+      <div class="sched-info"><div class="sched-name">${a.patients?.name||'—'}</div><div class="sched-sub">${a.notes||'موعد طبي'}</div></div>
+      <span class="badge ${sm[a.status]||'badge-a'}">${sl[a.status]||a.status}</span>
     </div>`;
   }).join('');
 }
 
-async function loadDPts(){
-  const {data}=await sb.from('patients').select('name,phone').eq('tenant_id',TID).order('created_at',{ascending:false}).limit(5);
-  const el=document.getElementById('dpts');
-  if(!data?.length){el.innerHTML='<div class="ld" style="color:var(--muted2)">لا يوجد مرضى بعد</div>';return;}
-  el.innerHTML=data.map((p,i)=>`<div style="display:flex;align-items:center;gap:9px;padding:8px 14px;border-bottom:1px solid var(--border2)">
-    <div class="av" style="background:${COLS[i%6]}">${(p.name||'?')[0]}</div>
-    <div style="flex:1"><div style="font-size:var(--xs);font-weight:700">${p.name}</div><div style="font-size:.6rem;color:var(--muted2);direction:ltr">${p.phone||'—'}</div></div>
-  </div>`).join('');
+async function loadDashPts(){
+  const {data}=await sb.from('patients').select('name,phone,blood_type').eq('tenant_id',TENANT).order('created_at',{ascending:false}).limit(6);
+  const el=document.getElementById('dash-pts');
+  if(!data?.length){ el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">لا يوجد مرضى بعد</div><div class="empty-sub">أضف أول مريض من الزر أعلاه</div></div>'; return; }
+  el.innerHTML=data.map((p,i)=>`
+    <div class="sched-row">
+      <div class="av" style="background:${COLORS[i%6]}">${(p.name||'?')[0]}</div>
+      <div class="sched-info"><div class="sched-name">${p.name}</div><div class="sched-sub" style="direction:ltr">${p.phone||'—'}</div></div>
+      ${p.blood_type?`<span class="badge badge-r">${p.blood_type}</span>`:''}
+    </div>`).join('');
 }
 
-// ══ PATIENTS ══
+// ── PATIENTS ──
 let allPts=[];
-async function loadPts(f=''){
-  if(!TID)return;
-  ld('ptb');
-  let q=sb.from('patients').select('*').eq('tenant_id',TID).order('created_at',{ascending:false});
-  if(f)q=q.or(`name.ilike.%${f}%,phone.ilike.%${f}%`);
+async function loadPatients(filter=''){
+  if(!TENANT) return;
+  const tb=document.getElementById('pts-body');
+  tb.innerHTML='<tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr>';
+  let q=sb.from('patients').select('*').eq('tenant_id',TENANT).order('created_at',{ascending:false});
+  if(filter) q=q.or(`name.ilike.%${filter}%,phone.ilike.%${filter}%`);
   const {data,error}=await q;
-  if(error){toast('❌ '+error.message,'err');return;}
+  if(error){ toast('❌ '+error.message,'err'); return; }
   allPts=data||[];
-  document.getElementById('ptsc').textContent=`${allPts.length} مريض مسجل`;
-  if(!allPts.length){document.getElementById('ptb').innerHTML='<tr><td colspan="5" style="text-align:center;padding:28px;color:var(--muted2)">لا يوجد مرضى — أضف أول مريض! 👆</td></tr>';return;}
-  document.getElementById('ptb').innerHTML=allPts.map((p,i)=>{
+  document.getElementById('pts-count').textContent=`${allPts.length} مريض مسجّل`;
+  if(!allPts.length){
+    tb.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="empty-icon">🧑‍⚕️</div><div class="empty-text">لا يوجد مرضى</div><div class="empty-sub">اضغط + مريض جديد للبداية</div></div></td></tr>`;
+    return;
+  }
+  tb.innerHTML=allPts.map((p,i)=>{
     const age=p.dob?Math.floor((Date.now()-new Date(p.dob))/(365.25*24*3600*1000))+'س':'—';
-    return `<tr>
-      <td><div style="display:flex;align-items:center;gap:7px"><div class="av" style="background:${COLS[i%6]}">${(p.name||'?')[0]}</div><div><div style="font-weight:700">${p.name}</div></div></div></td>
-      <td style="direction:ltr;color:var(--muted2)">${p.phone||'—'}</td>
+    return `<tr onclick="openModal('modal-appt')">
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="av" style="background:${COLORS[i%6]}">${(p.name||'?')[0]}</div><div><div style="font-weight:700">${p.name}</div></div></div></td>
+      <td style="direction:ltr;color:var(--text2)">${p.phone||'—'}</td>
       <td>${age}</td>
-      <td style="font-family:'Space Grotesk',sans-serif;font-size:.65rem;color:var(--muted2)">${p.patient_code||'—'}</td>
-      <td><button class="btn bp" style="padding:3px 9px;font-size:.6rem" onclick="om('ma')">📅 موعد</button></td>
+      <td>${p.blood_type?`<span class="badge badge-r">${p.blood_type}</span>`:'—'}</td>
+      <td style="font-family:var(--mono);font-size:.62rem;color:var(--text2)">${p.patient_code||'—'}</td>
+      <td><button class="btn btn-primary" style="padding:3px 10px;font-size:.6rem" onclick="event.stopPropagation();document.getElementById('a-phone').value='${p.phone||''}';openModal('modal-appt')">📅 موعد</button></td>
     </tr>`;
   }).join('');
 }
-function srchPts(v){loadPts(v)}
 
-async function savePt(){
-  const n=document.getElementById('pn').value.trim();
-  const p=document.getElementById('pp').value.trim();
-  if(!n||!p){toast('الاسم والجوال مطلوبان','err');return;}
+function searchPts(v){ loadPatients(v); }
+
+async function savePatient(){
+  const name=document.getElementById('p-name').value.trim();
+  const phone=document.getElementById('p-phone').value.trim();
+  if(!name||!phone){ toast('الاسم والجوال مطلوبان','err'); return; }
   const code='P-'+Date.now().toString().slice(-5);
-  const {error}=await sb.from('patients').insert({tenant_id:TID,name:n,phone:p,patient_code:code,dob:document.getElementById('pd').value||null,gender:document.getElementById('pg').value,blood_type:document.getElementById('pb').value,notes:document.getElementById('pnt').value||null});
-  if(error){toast('❌ '+error.message,'err');return;}
-  cm('mp');
-  ['pn','pp','pnt'].forEach(id=>document.getElementById(id).value='');
+  const {error}=await sb.from('patients').insert({
+    tenant_id:TENANT, name, phone,
+    patient_code:code,
+    dob:document.getElementById('p-dob').value||null,
+    gender:document.getElementById('p-gender').value,
+    blood_type:document.getElementById('p-blood').value,
+    notes:document.getElementById('p-notes').value||null
+  });
+  if(error){ toast('❌ '+error.message,'err'); return; }
+  closeModal('modal-patient');
+  ['p-name','p-phone','p-notes'].forEach(id=>document.getElementById(id).value='');
   toast('✅ تم حفظ المريض في قاعدة البيانات','ok');
-  loadPts(); loadDash();
+  loadPatients(); loadDash();
 }
 
-// ══ APPOINTMENTS ══
+// ── APPOINTMENTS ──
 async function loadAppts(){
-  if(!TID)return;
-  ld('atb');
-  const {data}=await sb.from('appointments').select('*,patients(name,phone)').eq('tenant_id',TID).order('scheduled_at',{ascending:false}).limit(40);
-  if(!data?.length){document.getElementById('atb').innerHTML='<tr><td colspan="5" style="text-align:center;padding:28px;color:var(--muted2)">لا توجد مواعيد بعد</td></tr>';return;}
-  const sm={confirmed:'bg',done:'bb',pending:'bgo',cancelled:'br',no_show:'br'};
+  if(!TENANT) return;
+  const tb=document.getElementById('appts-body');
+  tb.innerHTML='<tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr>';
+  const {data}=await sb.from('appointments').select('*,patients(name,phone)').eq('tenant_id',TENANT).order('scheduled_at',{ascending:false}).limit(50);
+  if(!data?.length){
+    tb.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="empty-icon">📅</div><div class="empty-text">لا توجد مواعيد</div></div></td></tr>`;
+    return;
+  }
+  const sm={confirmed:'badge-g',done:'badge-b',pending:'badge-a',cancelled:'badge-r',no_show:'badge-r'};
   const sl={confirmed:'مؤكد',done:'انتهى',pending:'انتظار',cancelled:'ملغي',no_show:'لم يحضر'};
-  document.getElementById('atb').innerHTML=data.map(a=>{
+  tb.innerHTML=data.map(a=>{
     const dt=new Date(a.scheduled_at);
-    const ds=dt.toLocaleDateString('ar')+' '+dt.toLocaleTimeString('ar',{hour:'2-digit',minute:'2-digit'});
     return `<tr>
-      <td style="font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--teal);direction:ltr;font-size:.65rem">${ds}</td>
+      <td style="font-family:var(--mono);font-weight:700;color:var(--teal);direction:ltr;font-size:.65rem">${dt.toLocaleDateString('ar')} ${dt.toLocaleTimeString('ar',{hour:'2-digit',minute:'2-digit'})}</td>
       <td style="font-weight:700">${a.patients?.name||'—'}</td>
+      <td style="direction:ltr;color:var(--text2)">${a.patients?.phone||'—'}</td>
       <td>${a.notes||'موعد طبي'}</td>
-      <td><span class="badge ${sm[a.status]||'bgo'}">${sl[a.status]||a.status}</span></td>
-      <td><button class="btn brr" style="padding:3px 8px;font-size:.6rem" onclick="cancelAppt('${a.id}')">إلغاء</button></td>
+      <td><span class="badge ${sm[a.status]||'badge-a'}">${sl[a.status]||a.status}</span></td>
+      <td><button class="btn btn-danger" style="padding:3px 9px;font-size:.6rem" onclick="cancelAppt('${a.id}')">إلغاء</button></td>
     </tr>`;
   }).join('');
 }
 
 async function cancelAppt(id){
-  if(!confirm('إلغاء هذا الموعد؟'))return;
+  if(!confirm('إلغاء هذا الموعد؟')) return;
   const {error}=await sb.from('appointments').update({status:'cancelled'}).eq('id',id);
-  if(error){toast('❌ '+error.message,'err');return;}
+  if(error){ toast('❌ '+error.message,'err'); return; }
   toast('✅ تم إلغاء الموعد','ok'); loadAppts();
 }
 
 async function saveAppt(){
-  const ph=document.getElementById('aph').value.trim();
-  const dt=document.getElementById('adt').value;
-  const tm=document.getElementById('atm').value;
-  if(!dt||!tm){toast('التاريخ والوقت مطلوبان','err');return;}
+  const phone=document.getElementById('a-phone').value.trim();
+  const date=document.getElementById('a-date').value;
+  const time=document.getElementById('a-time').value;
+  if(!date||!time){ toast('التاريخ والوقت مطلوبان','err'); return; }
   let pid=null;
-  if(ph){const {data:p}=await sb.from('patients').select('id').eq('tenant_id',TID).eq('phone',ph).single();if(p)pid=p.id;}
-  if(!pid){toast('❌ المريض غير موجود — أضفه أولاً','err');return;}
-  const {error}=await sb.from('appointments').insert({tenant_id:TID,patient_id:pid,scheduled_at:`${dt}T${tm}:00`,status:'confirmed',notes:document.getElementById('ant').value||null});
-  if(error){toast('❌ '+error.message,'err');return;}
-  cm('ma');
-  toast('✅ تم حجز الموعد','ok'); loadAppts(); loadDash();
+  if(phone){
+    const {data:p}=await sb.from('patients').select('id').eq('tenant_id',TENANT).eq('phone',phone).single();
+    if(p) pid=p.id;
+  }
+  if(!pid){ toast('❌ رقم الجوال غير موجود — أضف المريض أولاً','err'); return; }
+  const {error}=await sb.from('appointments').insert({
+    tenant_id:TENANT, patient_id:pid,
+    scheduled_at:`${date}T${time}:00`,
+    status:'confirmed',
+    notes:document.getElementById('a-notes').value||null
+  });
+  if(error){ toast('❌ '+error.message,'err'); return; }
+  closeModal('modal-appt');
+  document.getElementById('a-phone').value='';
+  document.getElementById('a-notes').value='';
+  toast('✅ تم حجز الموعد بنجاح','ok');
+  loadAppts(); loadDash();
 }
 
-// ══ DOCTORS ══
-async function loadDocs(){
-  if(!TID)return;
-  empty('dgrid','');
-  const {data}=await sb.from('users').select('*').eq('tenant_id',TID).eq('role','doctor');
-  if(!data?.length){empty('dgrid','لا يوجد أطباء — أضف أول طبيب! 👆');return;}
-  document.getElementById('dgrid').innerHTML=data.map((d,i)=>`
-    <div class="pnl">
-      <div class="pb">
-        <div style="display:flex;align-items:center;gap:9px;margin-bottom:11px">
-          <div style="width:42px;height:42px;border-radius:11px;background:${COLS[i%6]}18;display:flex;align-items:center;justify-content:center;font-size:1.2rem">🩺</div>
-          <div><div style="font-size:var(--sm);font-weight:800">${d.name}</div><div style="font-size:.6rem;color:var(--muted2);direction:ltr">${d.email}</div></div>
+// ── DOCTORS ──
+async function loadDoctors(){
+  if(!TENANT) return;
+  const grid=document.getElementById('doctors-grid');
+  grid.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const {data}=await sb.from('users').select('*').eq('tenant_id',TENANT).eq('role','doctor');
+  if(!data?.length){
+    grid.innerHTML=`<div class="empty"><div class="empty-icon">🩺</div><div class="empty-text">لا يوجد أطباء</div><div class="empty-sub">أضف أول طبيب في المركز</div></div>`;
+    return;
+  }
+  grid.innerHTML=data.map((d,i)=>`
+    <div class="panel">
+      <div class="panel-body">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:13px">
+          <div style="width:44px;height:44px;border-radius:12px;background:${COLORS[i%6]}15;border:1px solid ${COLORS[i%6]}30;display:flex;align-items:center;justify-content:center;font-size:1.2rem">🩺</div>
+          <div><div style="font-size:var(--md);font-weight:800">${d.name}</div><div style="font-size:.62rem;color:var(--text2);direction:ltr">${d.email}</div></div>
         </div>
-        <div class="sr"><span class="sk">الحالة</span><span class="sv"><span class="badge bg">نشط</span></span></div>
-        <div class="sr"><span class="sk">الجوال</span><span class="sv" style="direction:ltr;font-size:.65rem">${d.phone||'—'}</span></div>
+        <div class="stat"><span class="stat-k">الجوال</span><span class="stat-v" style="direction:ltr;font-size:.65rem">${d.phone||'—'}</span></div>
+        <div class="stat"><span class="stat-k">الحالة</span><span class="stat-v"><span class="badge badge-g">نشط</span></span></div>
       </div>
     </div>`).join('');
 }
 
-async function saveDoc(){
-  const n=document.getElementById('dn').value.trim();
-  const e=document.getElementById('de').value.trim();
-  const p=document.getElementById('dp').value;
-  if(!n||!e||!p){toast('جميع الحقول مطلوبة','err');return;}
-  const {error}=await sb.from('users').insert({tenant_id:TID,name:n,email:e,phone:document.getElementById('dph').value,password_hash:p,role:'doctor',status:'active'});
-  if(error){toast('❌ '+error.message,'err');return;}
-  cm('md'); toast('✅ تم إضافة الطبيب','ok'); loadDocs();
+async function saveDoctor(){
+  const name=document.getElementById('d-name').value.trim();
+  const email=document.getElementById('d-email').value.trim();
+  const pass=document.getElementById('d-pass').value;
+  if(!name||!email||!pass){ toast('جميع الحقول مطلوبة','err'); return; }
+  const {error}=await sb.from('users').insert({tenant_id:TENANT,name,email,phone:document.getElementById('d-phone').value,password_hash:pass,role:'doctor',status:'active'});
+  if(error){ toast('❌ '+error.message,'err'); return; }
+  closeModal('modal-doctor');
+  toast('✅ تم إضافة الطبيب','ok'); loadDoctors();
 }
 
-// ══ INVOICES ══
-async function loadInv(){
-  if(!TID)return;
-  ld('itb');
-  const {data}=await sb.from('invoices').select('*,patients(name)').eq('tenant_id',TID).order('created_at',{ascending:false}).limit(30);
-  if(!data?.length){document.getElementById('itb').innerHTML='<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--muted2)">لا توجد فواتير بعد</td></tr>';return;}
-  const sm={paid:'bg',pending:'bgo',cancelled:'br',refunded:'bb'};
+// ── INVOICES ──
+async function loadInvoices(){
+  if(!TENANT) return;
+  const tb=document.getElementById('inv-body');
+  tb.innerHTML='<tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr>';
+  const {data}=await sb.from('invoices').select('*,patients(name)').eq('tenant_id',TENANT).order('created_at',{ascending:false}).limit(40);
+  if(!data?.length){
+    tb.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="empty-icon">💳</div><div class="empty-text">لا توجد فواتير</div></div></td></tr>`;
+    return;
+  }
+  const sm={paid:'badge-g',pending:'badge-a',cancelled:'badge-r',refunded:'badge-b'};
   const sl={paid:'مسدد',pending:'معلق',cancelled:'ملغي',refunded:'مرتجع'};
-  document.getElementById('itb').innerHTML=data.map(v=>`
+  tb.innerHTML=data.map(v=>`
     <tr>
-      <td style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:.65rem">${v.invoice_number||'—'}</td>
+      <td style="font-family:var(--mono);font-weight:700;font-size:.65rem">${v.invoice_number||'—'}</td>
       <td style="font-weight:700">${v.patients?.name||'—'}</td>
       <td style="color:var(--green);font-weight:700">${Number(v.final_amount||0).toLocaleString('ar')} ر.س</td>
       <td>${v.payment_method||'—'}</td>
-      <td style="direction:ltr;color:var(--muted2);font-size:.65rem">${new Date(v.created_at).toLocaleDateString('ar')}</td>
-      <td><span class="badge ${sm[v.status]||'bgo'}">${sl[v.status]||v.status}</span></td>
+      <td style="direction:ltr;color:var(--text2);font-size:.65rem">${new Date(v.created_at).toLocaleDateString('ar')}</td>
+      <td><span class="badge ${sm[v.status]||'badge-a'}">${sl[v.status]||v.status}</span></td>
     </tr>`).join('');
 }
 
-async function saveInv(){
-  const ph=document.getElementById('iph').value.trim();
-  const am=Number(document.getElementById('iam').value);
-  if(!am){toast('المبلغ مطلوب','err');return;}
+async function saveInvoice(){
+  const phone=document.getElementById('i-phone').value.trim();
+  const amount=Number(document.getElementById('i-amount').value);
+  if(!amount){ toast('المبلغ مطلوب','err'); return; }
   let pid=null;
-  if(ph){const {data:p}=await sb.from('patients').select('id').eq('tenant_id',TID).eq('phone',ph).single();if(p)pid=p.id;}
+  if(phone){
+    const {data:p}=await sb.from('patients').select('id').eq('tenant_id',TENANT).eq('phone',phone).single();
+    if(p) pid=p.id;
+  }
   const num='INV-'+Date.now().toString().slice(-5);
-  const {error}=await sb.from('invoices').insert({tenant_id:TID,invoice_number:num,patient_id:pid,items:[{name:document.getElementById('isv').value,price:am}],total_amount:am,final_amount:am,payment_method:document.getElementById('imt').value,status:'pending'});
-  if(error){toast('❌ '+error.message,'err');return;}
-  cm('mi'); toast('✅ تم إصدار الفاتورة '+num,'ok'); loadInv();
+  const {error}=await sb.from('invoices').insert({
+    tenant_id:TENANT, invoice_number:num, patient_id:pid,
+    items:[{name:document.getElementById('i-service').value||'خدمة طبية',price:amount}],
+    total_amount:amount, final_amount:amount,
+    payment_method:document.getElementById('i-method').value,
+    status:'pending'
+  });
+  if(error){ toast('❌ '+error.message,'err'); return; }
+  closeModal('modal-invoice');
+  toast('✅ تم إصدار الفاتورة '+num,'ok'); loadInvoices();
 }
 
-// ══ SPECIALTIES ══
+// ── SPECIALTIES ──
 async function loadSpecs(){
-  if(!TID)return;
-  empty('sgrid','');
-  const {data}=await sb.from('specialties').select('*').eq('tenant_id',TID).order('sort_order');
-  if(!data?.length){empty('sgrid','لا توجد تخصصات — أضف تخصصاً! 👆');return;}
-  document.getElementById('sgrid').innerHTML=data.map((s,i)=>`
-    <div class="pnl">
-      <div class="pb">
-        <div style="font-size:1.8rem;margin-bottom:9px">${s.icon||'🏥'}</div>
-        <div style="font-size:var(--sm);font-weight:800;margin-bottom:8px">${s.name}</div>
-        <div class="sr"><span class="sk">مدة الجلسة</span><span class="sv">${s.appointment_duration} دق</span></div>
-        <div class="sr"><span class="sk">الحجز أونلاين</span><span class="sv">${s.online_booking?'✅':'❌'}</span></div>
-        <button class="btn brr" style="margin-top:9px;width:100%;justify-content:center;font-size:.6rem" onclick="delSpec('${s.id}')">🗑️ حذف</button>
+  if(!TENANT) return;
+  const grid=document.getElementById('specs-grid');
+  grid.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const {data}=await sb.from('specialties').select('*').eq('tenant_id',TENANT).order('sort_order');
+  if(!data?.length){
+    grid.innerHTML=`<div class="empty"><div class="empty-icon">🎯</div><div class="empty-text">لا توجد تخصصات</div><div class="empty-sub">أضف تخصصات مركزك الطبي</div></div>`;
+    return;
+  }
+  grid.innerHTML=data.map((s,i)=>`
+    <div class="panel">
+      <div class="panel-body">
+        <div style="font-size:2rem;margin-bottom:10px">${s.icon||'🏥'}</div>
+        <div style="font-size:var(--md);font-weight:800;margin-bottom:10px">${s.name}</div>
+        <div class="stat"><span class="stat-k">مدة الجلسة</span><span class="stat-v">${s.appointment_duration} دق</span></div>
+        <div class="stat"><span class="stat-k">الحجز أونلاين</span><span class="stat-v">${s.online_booking?'✅':'❌'}</span></div>
+        <button class="btn btn-danger" style="margin-top:10px;width:100%;justify-content:center;font-size:.6rem" onclick="deleteSpec('${s.id}')">🗑️ حذف</button>
       </div>
     </div>`).join('');
 }
 
 async function saveSpec(){
-  const n=document.getElementById('spn').value.trim();
-  if(!n){toast('اسم التخصص مطلوب','err');return;}
-  const {error}=await sb.from('specialties').insert({tenant_id:TID,name:n,icon:document.getElementById('spi').value||'🏥',appointment_duration:Number(document.getElementById('spd').value)||30,status:'active',sort_order:99,online_booking:true});
-  if(error){toast('❌ '+error.message,'err');return;}
-  cm('ms'); document.getElementById('spn').value='';
+  const name=document.getElementById('sp-name').value.trim();
+  if(!name){ toast('اسم التخصص مطلوب','err'); return; }
+  const {error}=await sb.from('specialties').insert({
+    tenant_id:TENANT, name,
+    icon:document.getElementById('sp-icon').value||'🏥',
+    appointment_duration:Number(document.getElementById('sp-dur').value)||30,
+    status:'active', sort_order:99, online_booking:true
+  });
+  if(error){ toast('❌ '+error.message,'err'); return; }
+  closeModal('modal-spec');
+  document.getElementById('sp-name').value='';
   toast('✅ تم إضافة التخصص','ok'); loadSpecs();
 }
 
-async function delSpec(id){
-  if(!confirm('حذف هذا التخصص؟'))return;
+async function deleteSpec(id){
+  if(!confirm('حذف هذا التخصص؟')) return;
   const {error}=await sb.from('specialties').delete().eq('id',id);
-  if(error){toast('❌ '+error.message,'err');return;}
+  if(error){ toast('❌ '+error.message,'err'); return; }
   toast('✅ تم الحذف','ok'); loadSpecs();
 }
 
-// ══ SETTINGS ══
-async function loadSett(){
-  if(!TID)return;
-  const {data:c}=await sb.from('centers').select('*').eq('tenant_id',TID).single();
-  if(c){document.getElementById('sn').value=c.name||'';document.getElementById('sp').value=c.phone||'';document.getElementById('se').value=c.email||'';document.getElementById('sc').value=c.city||'';}
-  const {data:{user}}=await sb.auth.getUser();
-  document.getElementById('su').textContent=user?.email||'—';
-  document.getElementById('sr2').textContent=document.getElementById('sbrole').textContent;
-  document.getElementById('st').textContent=TID||'—';
-}
-
-async function saveSett(){
-  const {error}=await sb.from('centers').update({name:document.getElementById('sn').value,phone:document.getElementById('sp').value,city:document.getElementById('sc').value}).eq('tenant_id',TID);
-  if(error){toast('❌ '+error.message,'err');return;}
-  toast('✅ تم حفظ الإعدادات','ok');
-  document.getElementById('cname').textContent=document.getElementById('sn').value;
-}
-
-// ══ INIT ══
-window.addEventListener('load',async()=>{
-  document.getElementById('screen-login').classList.add('active');
-  initSB();
-
-  // انتظر Supabase يكتمل
-  await new Promise(r=>setTimeout(r,500));
-
-  // تحقق من جلسة موجودة أو OAuth callback
-  const {data:{session}}=await sb.auth.getSession();
-  if(session){
-    await afterLogin(session.user);
-    return;
+// ── SETTINGS ──
+async function loadSettings(){
+  if(!TENANT) return;
+  const {data:c}=await sb.from('centers').select('*').eq('tenant_id',TENANT).single();
+  if(c){
+    document.getElementById('set-name').value=c.name||'';
+    document.getElementById('set-phone').value=c.phone||'';
+    document.getElementById('set-email').value=c.email||'';
+    document.getElementById('set-city').value=c.city||'';
   }
+  const {data:{user}}=await sb.auth.getUser();
+  document.getElementById('set-user').textContent=user?.email||'—';
+  document.getElementById('set-role').textContent=document.getElementById('sb-role').textContent;
+  document.getElementById('set-tenant').textContent=TENANT||'—';
+}
 
-  // استمع لتغييرات Auth (OAuth redirect)
+async function saveCenterSettings(){
+  if(!TENANT) return;
+  const {error}=await sb.from('centers').update({
+    name:document.getElementById('set-name').value,
+    phone:document.getElementById('set-phone').value,
+    city:document.getElementById('set-city').value
+  }).eq('tenant_id',TENANT);
+  if(error){ toast('❌ '+error.message,'err'); return; }
+  toast('✅ تم حفظ الإعدادات','ok');
+  document.getElementById('center-name').textContent=document.getElementById('set-name').value;
+}
+
+// ── BOOT ──
+window.addEventListener('load', async()=>{
+  initSupabase();
+  await new Promise(r=>setTimeout(r,600));
+  if(!sb) return;
+
+  // استمع لتغييرات Auth (Google OAuth redirect)
   sb.auth.onAuthStateChange(async(event,session)=>{
-    if(event==='SIGNED_IN' && session){
-      await afterLogin(session.user);
+    if((event==='SIGNED_IN'||event==='TOKEN_REFRESHED') && session){
+      if(!document.getElementById('screen-app').classList.contains('active')){
+        await afterLogin(session.user);
+      }
     }
   });
+
+  // تحقق من جلسة موجودة
+  const {data:{session}}=await sb.auth.getSession();
+  if(session) await afterLogin(session.user);
 });
 </script>
 </body>
